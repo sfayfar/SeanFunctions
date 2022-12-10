@@ -1,5 +1,31 @@
+[project]
+name = "SeanFunctions"
+# version = "0.0.1"
+dynamic = ["version"]
+authors = [
+  { name="Sean Fayfar", email="sfayfar@gmail.com" },
+]
+description = "Collection of useful python functions"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.mit.edu/sfayfar/SeanFunctions/"
+"Bug Tracker" = "https://github.mit.edu/sfayfar/SeanFunctions/issues"
+
+
+# [options]
+# packages = find:
+# python_requires = >=3.7
+# setup_requires = setuptools_scm
+
 [build-system]
-requires = ["setuptools>=61.0","wheel","setuptools_scm>=6.2"]
+requires = ["setuptools>=61.0","wheel","setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
