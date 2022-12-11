@@ -1,7 +1,7 @@
 [project]
 name = "SeanFunctions"
-# version = "0.0.1"
-dynamic = ["version"]
+version = "0.0.1"
+# dynamic = ["version"]
 authors = [
   { name="Sean Fayfar", email="sfayfar@gmail.com" },
 ]
@@ -14,9 +14,9 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
-# [project.urls]
-# "Homepage" = "https://github.mit.edu/sfayfar/SeanFunctions"
-# "Bug Tracker" = "https://github.mit.edu/sfayfar/SeanFunctions/issues"
+[project.urls]
+Homepage = "https://github.mit.edu/sfayfar/SeanFunctions"
+"Bug Tracker" = "https://github.mit.edu/sfayfar/SeanFunctions/issues"
 
 
 # [options]
@@ -25,7 +25,15 @@ classifiers = [
 # setup_requires = setuptools_scm
 
 [build-system]
-requires = ["setuptools>=61.0","wheel","setuptools_scm[toml]>=6.2"]
+requires = [
+    "setuptools>=61.0",
+    "wheel",
+    "setuptools_scm[toml]>=6.2",
+    "numpy",
+    "scipy",
+    "pathlib",
+    "varname"
+]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
