@@ -4,7 +4,7 @@ from scipy.optimize import minimize_scalar
 from scipy.integrate import simpson
 import os
 from pathlib import Path
-from varname import nameof
+# from varname import nameof
 
 
 gr = (1 + np.sqrt(5))/2 #Defines the golden ratio
@@ -32,7 +32,7 @@ def find_max(fitfunction,bounds):
 
 def discrete_integral(data):
     #Calculate a continuous discrete integral of data using the simpson method
-    dataNameStr = 'integrate_'+nameof(data)
+    # dataNameStr = 'integrate_'+nameof(data)
     dataInt = data * 0 
     for i in range(1,len(data)+1):
         dataInt[i-1,:] = np.array([data[i-1,0],simpson(data[:i,1],data[:i,0])])
