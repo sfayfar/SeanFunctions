@@ -14,9 +14,9 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
-[project.urls]
-"Homepage" = "https://github.mit.edu/sfayfar/SeanFunctions/"
-"Bug Tracker" = "https://github.mit.edu/sfayfar/SeanFunctions/issues"
+# [project.urls]
+# "Homepage" = "https://github.mit.edu/sfayfar/SeanFunctions"
+# "Bug Tracker" = "https://github.mit.edu/sfayfar/SeanFunctions/issues"
 
 
 # [options]
