@@ -1,6 +1,6 @@
 [project]
 name = "SeanFunctions"
-version = "0.0.1"
+version = "0.0.2"
 # dynamic = ["version"]
 authors = [
   { name="Sean Fayfar", email="sfayfar@gmail.com" },
@@ -31,10 +31,9 @@ requires = [
     "setuptools_scm[toml]>=6.2",
     "numpy",
     "scipy",
-    "pathlib",
-    "varname"
+    "pathlib"
 ]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
-write_to = "SeanFunctions/version.py"
+write_to = "SeanFunctions/_version.py"
