@@ -1,6 +1,7 @@
 dist
 SeanFunctions.egg-info
 *.pyc
+src/SeanFunctions/_version.py
 
 # Distribution / packaging
 .Python
