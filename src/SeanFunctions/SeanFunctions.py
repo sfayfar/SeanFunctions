@@ -88,7 +88,7 @@ def SaveToFile(fname,*data,header=None,directory=None,**kwargs):
                 print('Function aborted.')
                 return
     if '.' not in fname:
-        fname += '.txt'
+        fname += '.dat'
     outputFile = outputDir / str(fname)
 
     openFile = open(outputFile,'w')

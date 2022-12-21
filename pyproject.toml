@@ -1,6 +1,6 @@
 [project]
 name = "SeanFunctions"
-version = "0.0.2"
+version = "0.0.3"
 # dynamic = ["version"]
 authors = [
   { name="Sean Fayfar", email="sfayfar@gmail.com" },
@@ -23,6 +23,7 @@ Homepage = "https://github.mit.edu/sfayfar/SeanFunctions"
 # packages = find:
 # python_requires = >=3.7
 # setup_requires = setuptools_scm
+package_dir = "src"
 
 [build-system]
 requires = [
@@ -36,4 +37,4 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
-write_to = "SeanFunctions/_version.py"
+write_to = "src/SeanFunctions/_version.py"
