@@ -63,3 +63,29 @@ def atomic_form_factor(atom,QList,inputCoeff=None):
             sumData += coeff_values[i] * np.exp(-coeff_values[i+1] * (QList/(4*np.pi))**2)
         sumData += coeff_values[-1]
         return sumData
+
+
+def neutron_scattering_lengths():
+    '''
+    Returns a DataFrame of all the neutron scattering lengths. 
+    The neutron scattering lengths were taken from:
+    https://www.nist.gov/ncnr/neutron-scattering-lengths-list
+
+    Column    Unit    Quantity
+    1         ---     Isotope
+    2         ---     Natural abundance (for radioisotopes the half-life is given instead)
+    3         fm      bound coherent scattering length
+    4         fm      bound incoherent scattering length
+    5         barn    bound coherent scattering cross section
+    6         barn    bound incoherent scattering cross section
+    7         barn    total bound scattering cross section
+    8         barn    absorption cross section for 2200 m/s neutrons
+
+    Note: 1 fm = 1E-15 m, 1 barn = 1E-24 cm^2, scattering legnths and cross sections in parenthesis are uncertainties
+    '''
+
+    from pkg_resources import resource_stream
+
+    stream = resource_stream(__name__,'Data/NeutronScatteringLengths.csv')
+    nsl_DF = pd.read_csv(stream)
+    return nsl_DF
