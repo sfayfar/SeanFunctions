@@ -29,39 +29,6 @@ def find_nearest(array, value):
     return idx, array[idx]
 
 
-def find_max(fitfunction,bounds):
-    '''
-    Finds the maximum value of a Gaussian shaped function determined through a fit
-
-    Parameters
-    ---------
-    fitfunction : lmfit fitted class
-        Fitting result from lmfit
-    
-    bounds : array_like
-        A list of the bounds where the peak is located.
-
-    Return
-    --------
-    out : array with xvalue, maxvalue, maxvalueunc
-
-
-    Example
-    --------
-    modGaus = lmfit.models.Gaussian()
-    result = modGaus.fit(y,params,x=x)
-    maximum = find_max(result,[1,2])
-        '''
-    def function(xvalue):
-        return -fitfunction.eval(x=xvalue)
-    xvalue = minimize_scalar(function,bounds=bounds,method='bounded').x
-    maxvalue = fitfunction.eval(x=xvalue)
-    maxvalueunc = fitfunction.eval_uncertainty(x=xvalue)[0]
-    out = np.array([xvalue, maxvalue, maxvalueunc])
-    return out
-
-
-
 
 def discrete_integral(data):
     '''

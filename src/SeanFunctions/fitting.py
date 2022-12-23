@@ -57,3 +57,59 @@ def fitPeak(data,xleft,xright,peakType='Gaussian',constant=False):
     fitResult = modCombined.fit(fity,params,x=fitx)
     
     return fitResult
+
+
+def find_max(fitfunction,bounds):
+    '''
+    Finds the maximum value of a Gaussian shaped function determined through a fit
+
+    Parameters
+    ---------
+    fitfunction : lmfit fitted class
+        Fitting result from lmfit
+    
+    bounds : array_like
+        A list of the bounds where the peak is located.
+
+    Return
+    --------
+    out : array with xvalue, maxvalue, maxvalueunc
+
+
+    Example
+    --------
+    modGaus = lmfit.models.Gaussian()
+    result = modGaus.fit(y,params,x=x)
+    maximum = find_max(result,[1,2])
+        '''
+    from scipy.optimize import minimize_scalar
+    
+    def function(xvalue):
+        return -fitfunction.eval(x=xvalue)
+    xvalue = minimize_scalar(function,bounds=bounds,method='bounded').x
+    maxvalue = fitfunction.eval(x=xvalue)
+    maxvalueunc = fitfunction.eval_uncertainty(x=xvalue)[0]
+    out = np.array([xvalue, maxvalue, maxvalueunc])
+    return out
+
+
+def convertToUncFloat(paramResult):
+    '''
+    Converts a parameter output from lmfit to a uncertainties ufloat.
+
+    Parameters
+    ------
+    paramResult : Paramtere object from lmfit
+            Input the parameter after a fit to retrive the value
+            and uncertainty into a ufloat.
+
+    Returns
+    ------
+    out : ufloat
+        Returns a uncertainties ufloat value.
+    '''
+    from uncertainties import ufloat
+
+    out = ufloat(paramResult.value,paramResult.stderr)
+
+    return out
