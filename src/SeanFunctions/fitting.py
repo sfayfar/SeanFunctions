@@ -4,7 +4,7 @@ import lmfit as lm
 
 def fitPeak(data,xleft,xright,peakType='Gaussian',constant=False):
     '''
-    Fit data to a peak model with the provides bounds and the addition of a constant background term
+    Fit data to a peak model with the provided bounds and the addition of a constant background term
     
     Parameters
     --------
