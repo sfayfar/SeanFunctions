@@ -5,10 +5,9 @@ import numpy as np
 
 
 def atomic_form_factor_constants():
-    from pkg_resources import resource_stream
     '''
     Outputs a DataFrame of the coefficients for the analytical approximation to the atomic form factors. 
-    There were taken from the International Tables for Crystallography at:
+    The coefficients were taken from the International Tables for Crystallography at:
     http://it.iucr.org/Cb/ch6o1v0001/
 
     Parameters
@@ -21,6 +20,8 @@ def atomic_form_factor_constants():
     aff_DF : Pandas DataFrame
         contains the coefficients to use the analytical approximation of the atomic form factors. 
     '''
+    from pkg_resources import resource_stream
+
     stream = resource_stream(__name__,'Data/AtomicFormFactorConstants.csv')
     aff_DF = pd.read_csv(stream)
     return aff_DF
