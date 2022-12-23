@@ -44,4 +44,4 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
-write_to = "src/SeanFunctions/_version.py"
+write_to = "src/SeanFunctions/version.py"
