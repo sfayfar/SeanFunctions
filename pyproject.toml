@@ -29,8 +29,8 @@ package_dir = "src"
 # [tool.setuptools.packages.find]
 # where = ["src"]
 
-# [tool.setuptools.package-data]
-# "SeanFunctions.Data" = ["*.csv"]
+[tool.setuptools.package-data]
+"SeanFunctions.Data" = ["*.csv"]
 
 [build-system]
 requires = [
