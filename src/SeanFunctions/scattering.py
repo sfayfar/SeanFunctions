@@ -65,11 +65,23 @@ def atomic_form_factor(atom,QList,inputCoeff=None):
         return sumData
 
 
-def neutron_scattering_lengths():
+def neutron_scattering_lengths(rawTable=False):
     '''
     Returns a DataFrame of all the neutron scattering lengths. 
     The neutron scattering lengths were taken from:
     https://www.nist.gov/ncnr/neutron-scattering-lengths-list
+
+    Parameters
+    --------
+    rawTable : bool, options
+        Set true to output the raw table imported from the above link.
+        Otherwise it will import a table with symbols removed (errors +/- values etc.)
+        and corrected data types.
+
+    Returns
+    -------
+    nsl_DF : DataFrame
+        Contains the neutron scattering lengths of all elements and isotopes.
 
     Column    Unit    Quantity
     1         ---     Isotope
@@ -86,6 +98,19 @@ def neutron_scattering_lengths():
 
     from pkg_resources import resource_stream
 
-    stream = resource_stream(__name__,'Data/NeutronScatteringLengths.csv')
-    nsl_DF = pd.read_csv(stream)
+    if rawTable:
+        stream = resource_stream(__name__,'Data/NeutronScatteringLengths.csv')
+        nsl_DF = pd.read_csv(stream)
+        return nsl_DF
+
+
+    stream = resource_stream(__name__,'Data/NeutronScatteringLengths_Corrected.csv')
+    nsl_DF = pd.read_csv(stream).astype({'Isotope':'string',
+                                        'Conc':np.float64,
+                                        'Coh b':np.complex64,
+                                        'Inc b':np.complex64,
+                                        'Coh xs':np.float64,
+                                        'Inc xs':np.float64,
+                                        'Scatt xs':np.float64,
+                                        'Abs xs':np.float64})
     return nsl_DF
