@@ -1,7 +1,7 @@
 # from numpy import array, sqrt, asarray, argmin, abs, arange, zeros, sum, sinc, pi, max, column_stack
 import numpy as np
-from scipy.optimize import minimize_scalar
 from scipy.integrate import simpson
+import uncertainties as unc
 # import os
 # from pathlib import Path
 # from varname import nameof
@@ -148,4 +148,23 @@ def moving_average(x, w):
         The array will have a length of n-w+1
     '''
     out = np.convolve(x, np.ones(w), 'valid') / w
+    return out
+
+
+
+def convertToUncFloat(paramResult):
+    '''
+    Returns a ufloat from the inputed lmfit parameter class
+
+    Parameters 
+    --------
+    paramResult : lmfit parameter class
+                  Fitting parameters after using lmfit to perform fits.
+
+    Returns
+    --------
+    out : uncertainties float (ufloat)
+          The float value containing the uncertainty calculated from the fitting procedure.
+    '''
+    out = unc.ufloat(paramResult.value,paramResult.stderr)
     return out
