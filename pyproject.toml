@@ -39,7 +39,8 @@ requires = [
     "setuptools_scm[toml]>=6.2",
     "numpy",
     "scipy",
-    "pathlib"
+    "pathlib",
+    "lmfit"
 ]
 build-backend = "setuptools.build_meta"
 
