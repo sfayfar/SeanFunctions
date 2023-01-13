@@ -20,11 +20,17 @@ Homepage = "https://github.mit.edu/sfayfar/SeanFunctions"
 
 
 [options]
-# packages = find:
-# python_requires = >=3.7
-# setup_requires = setuptools_scm
+packages = "find:"
+python_requires = ">=3.7"
+setup_requires = "setuptools_scm"
 package_dir = "src"
-# include_package_data = "True"
+include_package_data = "True"
+install_requires = [
+    "numpy",
+    "scipy",
+    "pathlib",
+    "lmfit"
+]
 
 # [tool.setuptools.packages.find]
 # where = ["src"]
@@ -37,10 +43,6 @@ requires = [
     "setuptools>=61.0",
     "wheel",
     "setuptools_scm[toml]>=6.2",
-    "numpy",
-    "scipy",
-    "pathlib",
-    "lmfit"
 ]
 build-backend = "setuptools.build_meta"
 
