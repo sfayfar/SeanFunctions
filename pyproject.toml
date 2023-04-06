@@ -1,6 +1,6 @@
 [project]
 name = "SeanFunctions"
-version = "0.2.2"
+version = "0.3"
 # dynamic = ["version"]
 authors = [
   { name="Sean Fayfar", email="sfayfar@gmail.com" },
@@ -29,7 +29,8 @@ install_requires = [
     "numpy",
     "scipy",
     "pathlib",
-    "lmfit"
+    "lmfit",
+    "uncertainties"
 ]
 
 # [tool.setuptools.packages.find]

@@ -168,3 +168,64 @@ def convertToUncFloat(paramResult):
     '''
     out = unc.ufloat(paramResult.value,paramResult.stderr)
     return out
+
+
+
+def bin_data(dataArray_x,dataArray_y,minValue,maxValue,dataPoints,unpack=False):
+    '''
+    Returns rebinned x and y arrays
+
+    Parameters
+    ---------
+    dataArray_x : array_like
+                  The x-values of the array to be rebinned
+    dataArray_y : array_like
+                  The y-values of the array to be rebinned
+    minValue : value
+               The lower bound x-value of the new rebinned data
+    maxValue : value
+               The upper bound x-value of the new rebinned data
+    dataPoint : value
+                The number of bins to combine the data into
+    unpack : bool, optional
+        If unpack is True, the result will be output as a tuple to 
+        more easily define separate variables from the result
+
+    Returns
+    --------
+    binnedArray_x : ndarray
+                    New x-value bins
+    binnedArray_y : ndarray
+                    New y-values after binning
+    
+    
+    '''
+    from uncertainties.unumpy import uarray
+
+    binWidths = np.linspace(minValue,maxValue,dataPoints+1)
+    binnedArray_x = np.zeros(dataPoints)
+    
+    if dataArray_y.dtype == 'O':
+        binnedArray_y = uarray(range(dataPoints),range(dataPoints)) * 0.0
+    else:
+        binnedArray_y = np.zeros(dataPoints)
+    
+    for index in range(dataPoints):
+        left = binWidths[index]
+        right = binWidths[index+1]
+        binnedArray_x[index] = np.mean([left,right])
+        
+        locations = np.where((dataArray_x > left) & (dataArray_x <= right))[0]
+        if len(locations) != 0:
+            binnedArray_y[index] = np.mean(dataArray_y[locations]) / (right - left)
+        else:
+            if dataArray_y.dtype == 'O':
+                binnedArray_y[index] = unc.ufloat(0.0,0.0)
+            else:
+                binnedArray_y[index] = 0.0
+        
+        
+    if unpack:
+        return binnedArray_x, binnedArray_y
+    else:
+        return np.column_stack((binnedArray_x, binnedArray_y))
