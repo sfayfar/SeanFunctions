@@ -239,7 +239,7 @@ def bin_data(dataArray_x,dataArray_y,minValue,maxValue,dataPoints,unpack=False,m
     for index in range(dataPoints):
         left = binWidths[index]
         right = binWidths[index+1]
-        binnedArray_x[index] = func([left,right])
+        binnedArray_x[index] = np.mean([left,right])
 
         if density: 
             norm = (right - left)
