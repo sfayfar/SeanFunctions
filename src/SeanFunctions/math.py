@@ -171,7 +171,7 @@ def convertToUncFloat(paramResult):
 
 
 
-def bin_data(dataArray_x,dataArray_y,minValue,maxValue,dataPoints,unpack=False):
+def bin_data(dataArray_x,dataArray_y,minValue,maxValue,dataPoints,unpack=False,method='mean',density=False):
     '''
     Returns rebinned x and y arrays
 
@@ -188,8 +188,12 @@ def bin_data(dataArray_x,dataArray_y,minValue,maxValue,dataPoints,unpack=False):
     dataPoint : value
                 The number of bins to combine the data into
     unpack : bool, optional
-        If unpack is True, the result will be output as a tuple to 
-        more easily define separate variables from the result
+             If unpack is True, the result will be output as a tuple to 
+             more easily define separate variables from the result
+    method : str, optional
+             Choose either "sum" or "mean" for the method of combining data
+    density : bool, optional
+              Choose True to divide the data by the bin size creating a density = occurance/bin width
 
     Returns
     --------
@@ -197,10 +201,32 @@ def bin_data(dataArray_x,dataArray_y,minValue,maxValue,dataPoints,unpack=False):
                     New x-value bins
     binnedArray_y : ndarray
                     New y-values after binning
+
+    Example
+    ---------
+    x = np.array([0,1,2,3,4,5,6,7,8,9,10])
+    y = np.array([5,6,3,4,6,8,9,6,3,4,5])
+
+    output = bin_data(x,y,0,10,5)
+    print(output)
+
+    [[1.  4.5]
+    [3.  5. ]
+    [5.  8.5]
+    [7.  4.5]
+    [9.  4.5]]
     
     
     '''
     from uncertainties.unumpy import uarray
+
+    if method == 'mean':
+        func = np.mean
+    elif method == 'sum':
+        func = np.sum
+    else:
+        print('Method must be either "mean" or "sum".')
+        return -1
 
     binWidths = np.linspace(minValue,maxValue,dataPoints+1)
     binnedArray_x = np.zeros(dataPoints)
@@ -213,11 +239,16 @@ def bin_data(dataArray_x,dataArray_y,minValue,maxValue,dataPoints,unpack=False):
     for index in range(dataPoints):
         left = binWidths[index]
         right = binWidths[index+1]
-        binnedArray_x[index] = np.mean([left,right])
+        binnedArray_x[index] = func([left,right])
+
+        if density: 
+            norm = (right - left)
+        else:
+            norm = 1
         
         locations = np.where((dataArray_x > left) & (dataArray_x <= right))[0]
         if len(locations) != 0:
-            binnedArray_y[index] = np.mean(dataArray_y[locations]) / (right - left)
+            binnedArray_y[index] = func(dataArray_y[locations]) / norm
         else:
             if dataArray_y.dtype == 'O':
                 binnedArray_y[index] = unc.ufloat(0.0,0.0)
@@ -229,3 +260,42 @@ def bin_data(dataArray_x,dataArray_y,minValue,maxValue,dataPoints,unpack=False):
         return binnedArray_x, binnedArray_y
     else:
         return np.column_stack((binnedArray_x, binnedArray_y))
+    
+
+
+    
+def bin_ndarray(ndarray, new_shape, operation='sum'):
+    """
+    Bins an ndarray in all axes based on the target shape, by summing or
+        averaging.
+
+    Number of output dimensions must match number of input dimensions and 
+        new axes must divide old ones.
+
+    Example
+    -------
+    >>> m = np.arange(0,100,1).reshape((10,10))
+    >>> n = bin_ndarray(m, new_shape=(5,5), operation='sum')
+    >>> print(n)
+
+    [[ 22  30  38  46  54]
+     [102 110 118 126 134]
+     [182 190 198 206 214]
+     [262 270 278 286 294]
+     [342 350 358 366 374]]
+
+    """
+    operation = operation.lower()
+    if not operation in ['sum', 'mean']:
+        raise ValueError("Operation not supported.")
+    if ndarray.ndim != len(new_shape):
+        raise ValueError("Shape mismatch: {} -> {}".format(ndarray.shape,
+                                                           new_shape))
+    compression_pairs = [(d, c//d) for d,c in zip(new_shape,
+                                                  ndarray.shape)]
+    flattened = [l for p in compression_pairs for l in p]
+    ndarray = ndarray.reshape(flattened)
+    for i in range(len(new_shape)):
+        op = getattr(ndarray, operation)
+        ndarray = op(-1*(i+1))
+    return ndarray
