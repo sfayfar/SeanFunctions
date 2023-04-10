@@ -87,7 +87,7 @@ def fourierbesseltransform(q,int1,unpack=None):
     
     for i in range(nr):
         x = q * r[i]
-        ft[i] = sum(intq2 * np.sinc(x/np.pi)) #np.sinc = sin(pi*x)/(pi*x)
+        ft[i] = np.sum(intq2 * np.sinc(x/np.pi)) #np.sinc = sin(pi*x)/(pi*x)
     
     ft *= dq
     
