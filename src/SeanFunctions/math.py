@@ -171,7 +171,7 @@ def convertToUncFloat(paramResult):
 
 
 
-def bin_data(dataArray_x,dataArray_y,minValue,maxValue,dataPoints,unpack=False,method='mean',density=False):
+def bin_data(dataArray_x,dataArray_y,minValue,maxValue,dataPoints,unpack=False,method='mean',density=False,interpEmpty=False):
     '''
     Returns rebinned x and y arrays
 
@@ -219,6 +219,7 @@ def bin_data(dataArray_x,dataArray_y,minValue,maxValue,dataPoints,unpack=False,m
     
     '''
     from uncertainties.unumpy import uarray
+    from scipy.interpolate import interp1d
 
     if method == 'mean':
         func = np.mean
@@ -239,21 +240,32 @@ def bin_data(dataArray_x,dataArray_y,minValue,maxValue,dataPoints,unpack=False,m
     for index in range(dataPoints):
         left = binWidths[index]
         right = binWidths[index+1]
+        binSize = right - left
         binnedArray_x[index] = np.mean([left,right])
 
         if density: 
-            norm = (right - left)
+            norm = binSize
         else:
             norm = 1
         
-        locations = np.where((dataArray_x > left) & (dataArray_x <= right))[0]
+        locations = np.where((dataArray_x >= left) & (dataArray_x < right))[0]
         if len(locations) != 0:
             binnedArray_y[index] = func(dataArray_y[locations]) / norm
         else:
-            if dataArray_y.dtype == 'O':
-                binnedArray_y[index] = unc.ufloat(0.0,0.0)
+            if interpEmpty:
+                locationsExt = np.where((dataArray_x >= (left-binSize)) & (dataArray_x < (right+binSize)))[0]
+                if len(locationsExt) != 0:
+                    binnedArray_y[index] = interp1d(dataArray_x[locationsExt],dataArray_y[locationsExt],bounds_error=False,fill_value=0)(binnedArray_x[index])
+                else:
+                    if dataArray_y.dtype == 'O':
+                        binnedArray_y[index] = unc.ufloat(0.0,0.0)
+                    else:
+                        binnedArray_y[index] = 0.0
             else:
-                binnedArray_y[index] = 0.0
+                if dataArray_y.dtype == 'O':
+                    binnedArray_y[index] = unc.ufloat(0.0,0.0)
+                else:
+                    binnedArray_y[index] = 0.0
         
         
     if unpack:
