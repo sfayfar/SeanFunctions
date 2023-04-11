@@ -2,7 +2,7 @@ import numpy as np
 import lmfit as lm
 
 
-def fitPeak(data,xleft,xright,peakType='Gaussian',constant=False):
+def fitPeak(data,xleft,xright,peakType='Gaussian',constant=False,ampParams=None,centParams=None,constParams=None):
     '''
     Fit data to a peak model with the provided bounds and the addition of a constant background term
     
@@ -19,6 +19,12 @@ def fitPeak(data,xleft,xright,peakType='Gaussian',constant=False):
         All models are listed below.
     constant : bool, optional
         Whether to add a constant background value to the fit.
+    ampParams : dict, optional
+        Dictionary of optional keyword args for the amplitude param
+    centParams : dict, optional
+        Dictionary of optional keyword args for the center param
+    constParams : dict, optional
+        Dictionary of optional keyword args for the constant param
 
 
     Returns
@@ -48,11 +54,19 @@ def fitPeak(data,xleft,xright,peakType='Gaussian',constant=False):
     fitx = datax[dataLocations]
     fity = datay[dataLocations]
     
-    
-    params = modConst.guess(fity,x=fitx)
-    params+= modPeak.guess(fity,x=fitx)
-    
-    params['c'].set(min=0,max=np.max(fity))
+    params = modPeak.guess(fity,x=fitx)
+    if constant:
+        params += modConst.guess(fity,x=fitx)
+        if constParams is not None:
+            params['c'].set(**constParams)
+        else:
+            params['c'].set(min=0,max=np.max(fity))
+        
+    if ampParams is not None:
+        params['amplitude'].set(**ampParams)
+        
+    if centParams is not None:
+        params['center'].set(**centParams)
     
     fitResult = modCombined.fit(fity,params,x=fitx)
     
