@@ -73,7 +73,7 @@ def fitPeak(data,xleft,xright,peakType='Gaussian',constant=False,ampParams=None,
     return fitResult
 
 
-def find_max(fitfunction,bounds):
+def find_max(fitfunction,bounds,min=False):
     '''
     Finds the maximum value of a Gaussian shaped function determined through a fit
 
@@ -84,6 +84,9 @@ def find_max(fitfunction,bounds):
     
     bounds : array_like
         A list of the bounds where the peak is located.
+
+    min : bool, optional
+        Optional keyword for finding minimum rather than maximum
 
     Return
     --------
@@ -98,8 +101,14 @@ def find_max(fitfunction,bounds):
         '''
     from scipy.optimize import minimize_scalar
     
+    if min:
+        scale = 1
+    else:
+        scale = -1
+
+
     def function(xvalue):
-        return -fitfunction.eval(x=xvalue)
+        return scale * fitfunction.eval(x=xvalue)
     xvalue = minimize_scalar(function,bounds=bounds,method='bounded').x
     maxvalue = fitfunction.eval(x=xvalue)
     maxvalueunc = fitfunction.eval_uncertainty(x=xvalue)[0]
