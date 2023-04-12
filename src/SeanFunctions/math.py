@@ -179,21 +179,32 @@ def bin_data(dataArray_x,dataArray_y,minValue,maxValue,dataPoints,unpack=False,m
     ---------
     dataArray_x : array_like
                   The x-values of the array to be rebinned
+
     dataArray_y : array_like
                   The y-values of the array to be rebinned
     minValue : value
                The lower bound x-value of the new rebinned data
+
     maxValue : value
                The upper bound x-value of the new rebinned data
+
     dataPoint : value
                 The number of bins to combine the data into
+
     unpack : bool, optional
              If unpack is True, the result will be output as a tuple to 
              more easily define separate variables from the result
+
     method : str, optional
              Choose either "sum" or "mean" for the method of combining data
+
     density : bool, optional
               Choose True to divide the data by the bin size creating a density = occurance/bin width
+
+    interpEmpty : bool/int, optional
+              Option to use interpolation when no data points exist within a bin. 
+              This will extend the bin width by a multiple of the input value and 
+              use interpolation at the bin location. 
 
     Returns
     --------
@@ -253,7 +264,9 @@ def bin_data(dataArray_x,dataArray_y,minValue,maxValue,dataPoints,unpack=False,m
             binnedArray_y[index] = func(dataArray_y[locations]) / norm
         else:
             if interpEmpty:
-                locationsExt = np.where((dataArray_x >= (left-binSize)) & (dataArray_x < (right+binSize)))[0]
+                if interpEmpty < 0:
+                    raise ValueError("inpterEmpty must be greater than 0.")
+                locationsExt = np.where((dataArray_x >= (left - interpEmpty * binSize)) & (dataArray_x < (right+ interpEmpty * binSize)))[0]
                 if len(locationsExt) != 0:
                     binnedArray_y[index] = interp1d(dataArray_x[locationsExt],dataArray_y[locationsExt],bounds_error=False,fill_value=0)(binnedArray_x[index])
                 else:
