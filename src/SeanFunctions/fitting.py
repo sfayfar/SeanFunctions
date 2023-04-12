@@ -2,7 +2,7 @@ import numpy as np
 import lmfit as lm
 
 
-def fitPeak(data,xleft,xright,peakType='Gaussian',constant=False,ampParams=None,centParams=None,constParams=None):
+def fitPeak(data,xleft,xright,peakType='Gaussian',constant=False,ampParams=None,centParams=None,constParams=None,gammaParams=None):
     '''
     Fit data to a peak model with the provided bounds and the addition of a constant background term
     
@@ -10,19 +10,29 @@ def fitPeak(data,xleft,xright,peakType='Gaussian',constant=False,ampParams=None,
     --------
     data : array_like
         Input 2D array containing the data to fit.
+
     xleft : float
         Left boundary of the data to fit.
+
     xright : float
         Right boundary of the data to fit.
+
     peakType : str, optional
         The type of peak to use for the fit. The default choice is a Gaussian model.
         All models are listed below.
+
     constant : bool, optional
         Whether to add a constant background value to the fit.
+
     ampParams : dict, optional
         Dictionary of optional keyword args for the amplitude param
+
     centParams : dict, optional
         Dictionary of optional keyword args for the center param
+
+    gammaParams : dict, optional
+        Dictionary of optional keyword args for the gamma param
+
     constParams : dict, optional
         Dictionary of optional keyword args for the constant param
 
@@ -31,13 +41,49 @@ def fitPeak(data,xleft,xright,peakType='Gaussian',constant=False,ampParams=None,
     --------
     fitResult : lmfit ModelResult object
         The ModelResult contains the fitting results created by lmfit. 
+
+
+
+    Models
+    --------
+    Constant
+    Complex Constant
+    Linear
+    Quadratic
+    Polynomial
+    Spline
+    Gaussian
+    Gaussian-2D
+    Lorentzian
+    Split-Lorentzian
+    Voigt
+    PseudoVoigt
+    Moffat
+    Pearson4
+    Pearson7
+    StudentsT
+    Breit-Wigner
+    Log-Normal
+    Damped Oscillator
+    Damped Harmonic Oscillator
+    Exponential Gaussian
+    Skewed Gaussian
+    Skewed Voigt
+    Thermal Distribution
+    Doniach
+    Power Law
+    Exponential
+    Step
+    Rectangle
+    Expression
+    
     '''
     
     if peakType not in lm.models.lmfit_models.keys():
-        print('Peak type not available. Options are:')
+        keyList = []
         for keys in lm.models.lmfit_models.keys():
-            print(keys)
-        return -1
+            keyList.append(keys)
+        raise ValueError('Peak types:',' '.join(keyList))
     
     datax = data[:,0]
     datay = data[:,1]
@@ -67,6 +113,9 @@ def fitPeak(data,xleft,xright,peakType='Gaussian',constant=False,ampParams=None,
         
     if centParams is not None:
         params['center'].set(**centParams)
+
+    if gammaParams is not None:
+        params['gamma'].set(**gammaParams)
     
     fitResult = modCombined.fit(fity,params,x=fitx)
     
