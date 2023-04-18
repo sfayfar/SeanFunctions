@@ -122,7 +122,7 @@ def fitPeak(data,xleft,xright,peakType='Gaussian',constant=False,ampParams=None,
     return fitResult
 
 
-def find_max(fitfunction,bounds,min=False,evalUnc=True,params=params):
+def find_max(fitfunction,bounds,min=False,evalUnc=True,params=None):
     '''
     Finds the maximum value of a Gaussian shaped function determined through a fit
 
