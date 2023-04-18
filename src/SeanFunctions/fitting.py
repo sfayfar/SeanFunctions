@@ -122,7 +122,7 @@ def fitPeak(data,xleft,xright,peakType='Gaussian',constant=False,ampParams=None,
     return fitResult
 
 
-def find_max(fitfunction,bounds,min=False):
+def find_max(fitfunction,bounds,min=False,evalUnc=True,params=params):
     '''
     Finds the maximum value of a Gaussian shaped function determined through a fit
 
@@ -157,11 +157,14 @@ def find_max(fitfunction,bounds,min=False):
 
 
     def function(xvalue):
-        return scale * fitfunction.eval(x=xvalue)
+        return scale * fitfunction.eval(x=xvalue,params=params)
     xvalue = minimize_scalar(function,bounds=bounds,method='bounded').x
-    maxvalue = fitfunction.eval(x=xvalue)
-    maxvalueunc = fitfunction.eval_uncertainty(x=xvalue)[0]
-    out = np.array([xvalue, maxvalue, maxvalueunc])
+    maxvalue = fitfunction.eval(x=xvalue,params=params)
+    if evalUnc:
+        maxvalueunc = fitfunction.eval_uncertainty(x=xvalue,params=params)[0]
+        out = np.array([xvalue, maxvalue, maxvalueunc])
+    else:
+        out = np.array([xvalue, maxvalue])
     return out
 
 
