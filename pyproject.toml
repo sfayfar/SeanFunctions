@@ -1,6 +1,6 @@
 [project]
 name = "SeanFunctions"
-version = "0.4.7b"
+version = "0.5.0"
 # dynamic = ["version"]
 authors = [
   { name="Sean Fayfar", email="sfayfar@gmail.com" },
