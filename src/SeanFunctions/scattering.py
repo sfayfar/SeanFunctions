@@ -123,7 +123,7 @@ def neutron_scattering_lengths(rawTable=False):
 
 class weight_RDF_for_scattering:
     
-    def __init__(self,RDF_DataFrame,composition,cutoffR=None,isotopeDict=None):
+    def __init__(self,RDF_DataFrame,composition,cutoffR=None,isotopeDict=None,ionsDict=None):
         '''
         Converts molecular dynamics partial RDFs into weighted g(r) and S(Q) for neutron and X-ray scattering.
         The input RDF must be a Pandas DataFrame with the column names as the atomic pairs such as "F-F" or "Na-Cl".
@@ -146,6 +146,11 @@ class weight_RDF_for_scattering:
                     The dict must start with the atom then include isotopes.
                     The total must sum to 1.
                     Ex: {'Li':{'7Li':0.9,'6Li':0.1}}
+
+        ionsDict : dict, optional
+                Add the ionic charge for the form factors rather than 
+                the atomic form factors.
+                Ex: {'Li':'1+','Be':'2+','F':'1-'}
 
         Returns
         --------
@@ -190,6 +195,11 @@ class weight_RDF_for_scattering:
         else:
             bArr = [neutronScatteringLengths.loc[neutronScatteringLengths['Isotope'].str.fullmatch(atomArr[i])]['Coh b'].values[0].real for i in range(len(atomArr))]
         
+        if ionsDict is not None:
+            affArr = [atomic_form_factor(atomArr[i]+ionsDict[atomArr[i]],QArrInterp) for i in range(len(atomArr))]
+        else:
+            affArr = [atomic_form_factor(atomArr[i],QArrInterp) for i in range(len(atomArr))]
+
         
         QArr, SofQ = fourierbesseltransform(RDF_DataFrame.iloc[:,0],RDF_DataFrame.iloc[:,1]-1,unpack=True)
         QArrInterp = np.linspace(QArr[0],QArr[-1],len(QArr)*10)
@@ -198,7 +208,7 @@ class weight_RDF_for_scattering:
                                         'conc':concArr/np.sum(concArr),
                                         'amu':[pTable.element(atomArr[i]).atomic_weight for i in range(len(atomArr))],
                                         'b':bArr,
-                                        'aff':[atomic_form_factor(atomArr[i],QArrInterp) for i in range(len(atomArr))]
+                                        'aff':affArr
                                                 },
                                             index=atomArr)
         
