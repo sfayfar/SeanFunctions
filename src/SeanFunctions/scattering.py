@@ -278,8 +278,9 @@ class weight_RDF_for_scattering:
         self.gofrXray = pd.DataFrame()
         # self.gofrXray['r'] = RDF_DataFrame.iloc[:,0]
         totalgofr = 0
+        cutAt100InvAng = find_nearest(self.SofQXray['Q'],100)[0]
         for column in RDF_DataFrame.keys()[1:]:
-            r, gofr = fourierbesseltransform(self.SofQXray['Q'].iloc[::10].to_numpy(),self.SofQXray[column].iloc[::10].to_numpy(),unpack=True)
+            r, gofr = fourierbesseltransform(self.SofQXray['Q'].iloc[:cutAt100InvAng:10].to_numpy(),self.SofQXray[column].iloc[:cutAt100InvAng:10].to_numpy(),unpack=True)
             self.gofrXray['r'] = r
             self.gofrXray[column] = gofr * 2 / np.pi
             totalgofr += gofr * 2 / np.pi
