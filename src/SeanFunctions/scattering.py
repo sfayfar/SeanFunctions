@@ -331,5 +331,5 @@ class weight_RDF_for_scattering:
         -------
         num_density : float
         '''
-        num_density = constants.Avogadro/10**24 * np.sum(self.compositionTable.conc * self.compositionTable.amu)
+        num_density = constants.Avogadro/10**24 * density / np.sum([self.compositionTable.conc * self.compositionTable.amu])
         return num_density
