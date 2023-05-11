@@ -195,14 +195,14 @@ class weight_RDF_for_scattering:
         else:
             bArr = [neutronScatteringLengths.loc[neutronScatteringLengths['Isotope'].str.fullmatch(atomArr[i])]['Coh b'].values[0].real for i in range(len(atomArr))]
         
+        QArr, SofQ = fourierbesseltransform(RDF_DataFrame.iloc[:,0],RDF_DataFrame.iloc[:,1]-1,unpack=True)
+        QArrInterp = np.linspace(QArr[0],QArr[-1],len(QArr)*10)
+
         if ionsDict is not None:
             affArr = [atomic_form_factor(atomArr[i]+ionsDict[atomArr[i]],QArrInterp) for i in range(len(atomArr))]
         else:
             affArr = [atomic_form_factor(atomArr[i],QArrInterp) for i in range(len(atomArr))]
-
         
-        QArr, SofQ = fourierbesseltransform(RDF_DataFrame.iloc[:,0],RDF_DataFrame.iloc[:,1]-1,unpack=True)
-        QArrInterp = np.linspace(QArr[0],QArr[-1],len(QArr)*10)
         
         self.compositionTable = pd.DataFrame({
                                         'conc':concArr/np.sum(concArr),
