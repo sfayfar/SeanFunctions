@@ -3,6 +3,7 @@ import numpy as np
 import re
 import mendeleev as pTable
 from scipy.interpolate import interp1d
+from scipy import constants
 from matplotlib import pyplot as plt
 from .math import find_nearest, fourierbesseltransform
 # from importlib import resources
@@ -315,3 +316,20 @@ class weight_RDF_for_scattering:
         for column in self.gofrXray.keys()[1:-1]:
             ax.plot(self.gofrXray['r'],self.gofrXray[column],'-',lw=1,label=column,**kwargs)
         return ax
+    
+    def calc_num_density(self,density):
+        '''
+        Calculates the number density (in num per Ang^3) using the 
+        chemical formula and input density.
+
+        Inputs
+        ------
+        density : float
+                The density of the material at the desired temperature.
+
+        Returns
+        -------
+        num_density : float
+        '''
+        num_density = constants.Avogadro/10**24 * np.sum(self.compositionTable.conc * self.compositionTable.amu)
+        return num_density
