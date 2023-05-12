@@ -30,7 +30,8 @@ install_requires = [
     "scipy",
     "pathlib",
     "lmfit",
-    "uncertainties"
+    "uncertainties",
+    "mendeleev"
 ]
 
 # [tool.setuptools.packages.find]
