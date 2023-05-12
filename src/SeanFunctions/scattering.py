@@ -301,28 +301,28 @@ class weight_RDF_for_scattering:
         ax = plt.axes(axes)
         ax.plot(self.SofQNeutron['Q'],self.SofQNeutron['Total'],'k-',lw=2,label='Total',**kwargs)
         for column in self.SofQNeutron.keys()[1:-1]:
-            ax.plot(self.SofQNeutron['Q'],self.SofQNeutron[column],'-',lw=1,label=column,**kwargs)
+            ax.plot(self.SofQNeutron['Q'],self.SofQNeutron[column],'--',lw=1,label=column,**kwargs)
         return ax
     
     def plot_gofrNeutron(self,axes=None,**kwargs):
         ax = plt.axes(axes)
         ax.plot(self.gofrNeutron['r'],self.gofrNeutron['Total'],'k-',lw=2,label='Total',**kwargs)
         for column in self.gofrNeutron.keys()[1:-1]:
-            ax.plot(self.gofrNeutron['r'],self.gofrNeutron[column],'-',lw=1,label=column,**kwargs)
+            ax.plot(self.gofrNeutron['r'],self.gofrNeutron[column],'--',lw=1,label=column,**kwargs)
         return ax
     
     def plot_SofQXray(self,axes=None,**kwargs):
         ax = plt.axes(axes)
         ax.plot(self.SofQXray['Q'],self.SofQXray['Total'],'k-',lw=2,label='Total',**kwargs)
         for column in self.SofQXray.keys()[1:-1]:
-            ax.plot(self.SofQXray['Q'],self.SofQXray[column],'-',lw=1,label=column,**kwargs)
+            ax.plot(self.SofQXray['Q'],self.SofQXray[column],'--',lw=1,label=column,**kwargs)
         return ax
     
     def plot_gofrXray(self,axes=None,**kwargs):
         ax = plt.axes(axes)
         ax.plot(self.gofrXray['r'],self.gofrXray['Total'],'k-',lw=2,label='Total',**kwargs)
         for column in self.gofrXray.keys()[1:-1]:
-            ax.plot(self.gofrXray['r'],self.gofrXray[column],'-',lw=1,label=column,**kwargs)
+            ax.plot(self.gofrXray['r'],self.gofrXray[column],'--',lw=1,label=column,**kwargs)
         return ax
     
     def calc_num_density(self,density):
