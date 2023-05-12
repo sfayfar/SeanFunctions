@@ -124,7 +124,7 @@ def neutron_scattering_lengths(rawTable=False):
 
 class weight_RDF_for_scattering:
     
-    def __init__(self,RDF_DataFrame,composition,cutoffR=None,isotopeDict=None,ionsDict=None):
+    def __init__(self,RDF_DataFrame,composition,cutoffR=None,isotopeDict=None,ionsDict=None,interpType='cubic',interpAmount=10):
         '''
         Converts molecular dynamics partial RDFs into weighted g(r) and S(Q) for neutron and X-ray scattering.
         The input RDF must be a Pandas DataFrame with the column names as the atomic pairs such as "F-F" or "Na-Cl".
@@ -152,6 +152,14 @@ class weight_RDF_for_scattering:
                 Add the ionic charge for the form factors rather than 
                 the atomic form factors.
                 Ex: {'Li':'1+','Be':'2+','F':'1-'}
+
+        interpType : string, optional
+                The type of interpolation to use with Scipy's interp1d function.
+                Options: 'linear', 'quadratic', 'cubic' (default)
+
+        interpAmount : int, optional
+                The multiple amount of data points to add.
+                Default value of 10. 
 
         Returns
         --------
@@ -197,12 +205,12 @@ class weight_RDF_for_scattering:
             bArr = [neutronScatteringLengths.loc[neutronScatteringLengths['Isotope'].str.fullmatch(atomArr[i])]['Coh b'].values[0].real for i in range(len(atomArr))]
         
         QArr, SofQ = fourierbesseltransform(RDF_DataFrame.iloc[:,0],RDF_DataFrame.iloc[:,1]-1,unpack=True)
-        QArrInterp = np.linspace(QArr[0],QArr[-1],len(QArr)*10)
+        self.QArrInterp = np.linspace(QArr[0],QArr[-1],len(QArr)*interpAmount)
 
         if ionsDict is not None:
-            affArr = [atomic_form_factor(atomArr[i]+ionsDict[atomArr[i]],QArrInterp) for i in range(len(atomArr))]
+            affArr = [atomic_form_factor(atomArr[i]+ionsDict[atomArr[i]],self.QArrInterp) for i in range(len(atomArr))]
         else:
-            affArr = [atomic_form_factor(atomArr[i],QArrInterp) for i in range(len(atomArr))]
+            affArr = [atomic_form_factor(atomArr[i],self.QArrInterp) for i in range(len(atomArr))]
         
         
         self.compositionTable = pd.DataFrame({
@@ -221,8 +229,8 @@ class weight_RDF_for_scattering:
             Q, SofQ = fourierbesseltransform(RDF_DataFrame.iloc[:,0],RDF_DataFrame[column]-1,unpack=True)
             # self.unweightedSofQ_nointerp['Q'] = Q
             # self.unweightedSofQ_nointerp[column] = SofQ
-            SofQ_interp = interp1d(Q,SofQ,kind='cubic',bounds_error=False,fill_value=np.nan)(QArrInterp)
-            self.unweightedSofQ['Q'] = QArrInterp
+            SofQ_interp = interp1d(Q,SofQ,kind=interpType,bounds_error=False,fill_value=np.nan)(self.QArrInterp)
+            self.unweightedSofQ['Q'] = self.QArrInterp
             self.unweightedSofQ[column] = SofQ_interp
             totalUnweightedSofQ += self.unweightedSofQ[column]
         self.unweightedSofQ['Total'] = totalUnweightedSofQ
@@ -248,7 +256,7 @@ class weight_RDF_for_scattering:
         
         # Neutron SofQ
         self.SofQNeutron = pd.DataFrame()
-        self.SofQNeutron['Q'] = QArrInterp
+        self.SofQNeutron['Q'] = self.QArrInterp
         totalSofQ = 0
         for column in RDF_DataFrame.keys()[1:]:
             self.SofQNeutron[column] = self.weightArrayNeutron[column] * self.unweightedSofQ[column] / self.weightTotalNeutron
@@ -268,7 +276,7 @@ class weight_RDF_for_scattering:
         
         # X-ray SofQ
         self.SofQXray = pd.DataFrame()
-        self.SofQXray['Q'] = QArrInterp
+        self.SofQXray['Q'] = self.QArrInterp
         totalSofQ = 0
         for column in RDF_DataFrame.keys()[1:]:
             self.SofQXray[column] = self.weightArrayXray[column] * self.unweightedSofQ[column] / self.weightTotalXray
