@@ -189,7 +189,7 @@ class weight_RDF_for_scattering:
         if cutoffR is not None:
             cutoff = find_nearest(RDF_DataFrame.iloc[:,0],cutoffR)[0]
             RDF_DataFrame = RDF_DataFrame.iloc[:cutoff,:]
-        self.partialRDF = RDF_DataFrame
+        self.partialRDF = RDF_DataFrame.rename(columns = {RDF_DataFrame.keys()[0]:'r'})
         
         if isotopeDict is not None:
             bArr = []
@@ -222,7 +222,7 @@ class weight_RDF_for_scattering:
                                             index=atomArr)
         
         # First Fourier transform the partial RDFs to partial SofQs
-        totalUnweightedSofQ = 0
+        # totalUnweightedSofQ = 0
         self.unweightedSofQ = pd.DataFrame()
         # self.unweightedSofQ_nointerp = pd.DataFrame()
         for column in RDF_DataFrame.keys()[1:]:
@@ -232,8 +232,8 @@ class weight_RDF_for_scattering:
             SofQ_interp = interp1d(Q,SofQ,kind=interpType,bounds_error=False,fill_value=np.nan)(self.QArrInterp)
             self.unweightedSofQ['Q'] = self.QArrInterp
             self.unweightedSofQ[column] = SofQ_interp
-            totalUnweightedSofQ += self.unweightedSofQ[column]
-        self.unweightedSofQ['Total'] = totalUnweightedSofQ
+        #     totalUnweightedSofQ += self.unweightedSofQ[column]
+        # self.unweightedSofQ['Total'] = totalUnweightedSofQ
         
         # Neutron weighting
         self.weightArrayNeutron = {}
