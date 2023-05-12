@@ -170,7 +170,8 @@ class weight_RDF_for_scattering:
 
         unweightedSofQ : DataFrame
         '''
-        
+        self.isotopeDict = isotopeDict
+        self.ionsDict = ionsDict
         neutronScatteringLengths = neutron_scattering_lengths()
         
         # First convert the inputed composition to an array with the atoms and their fractional composition
@@ -191,13 +192,13 @@ class weight_RDF_for_scattering:
             RDF_DataFrame = RDF_DataFrame.iloc[:cutoff,:]
         self.partialRDF = RDF_DataFrame.rename(columns = {RDF_DataFrame.keys()[0]:'r'})
         
-        if isotopeDict is not None:
+        if self.isotopeDict is not None:
             bArr = []
             for atoms in atomArr:
-                if atoms in isotopeDict.keys():
+                if atoms in self.isotopeDict.keys():
                     bValue = 0
-                    for isotope in isotopeDict[atoms].keys():
-                        bValue += isotopeDict[atoms][isotope] * neutronScatteringLengths.loc[neutronScatteringLengths['Isotope'].str.fullmatch(isotope)]['Coh b'].values[0].real
+                    for isotope in self.isotopeDict[atoms].keys():
+                        bValue += self.isotopeDict[atoms][isotope] * neutronScatteringLengths.loc[neutronScatteringLengths['Isotope'].str.fullmatch(isotope)]['Coh b'].values[0].real
                     bArr.append(bValue)
                 else:
                     bArr.append(neutronScatteringLengths.loc[neutronScatteringLengths['Isotope'].str.fullmatch(atoms)]['Coh b'].values[0].real)
@@ -207,8 +208,8 @@ class weight_RDF_for_scattering:
         QArr, SofQ = fourierbesseltransform(RDF_DataFrame.iloc[:,0],RDF_DataFrame.iloc[:,1]-1,unpack=True)
         self.QArrInterp = np.linspace(QArr[0],QArr[-1],len(QArr)*interpAmount)
 
-        if ionsDict is not None:
-            affArr = [atomic_form_factor(atomArr[i]+ionsDict[atomArr[i]],self.QArrInterp) for i in range(len(atomArr))]
+        if self.ionsDict is not None:
+            affArr = [atomic_form_factor(atomArr[i]+self.ionsDict[atomArr[i]],self.QArrInterp) for i in range(len(atomArr))]
         else:
             affArr = [atomic_form_factor(atomArr[i],self.QArrInterp) for i in range(len(atomArr))]
         
@@ -325,6 +326,23 @@ class weight_RDF_for_scattering:
             ax.plot(self.gofrXray['r'],self.gofrXray[column],'--',lw=1,label=column,**kwargs)
         return ax
     
+    def plot_scatteringLengths(self,axes=None,xray=True,neutron=True,**kwargs):
+        ax = plt.axes(axes)
+
+        for atoms in self.compositionTable.index:
+            if neutron:
+                labelValue = atoms
+                if self.isotopeDict is not None:
+                    if atoms in self.isotopeDict.keys():
+                        labelValue + str(self.isotopeDict[atoms])
+                ax.plot(self.QArrInterp,np.full(len(self.QArrInterp),self.compositionTable.b[atoms]),'-',lw=1,label=labelValue+' b',**kwargs)
+            if xray:
+                labelValue = atoms
+                if self.ionsDict is not None:
+                        if atoms in self.ionsDict.keys():
+                            labelValue += str(self.ionsDict[atoms])
+                ax.plot(self.QArrInterp,self.compositionTable.aff[atoms],'-',lw=1,label=labelValue+' aff',**kwargs)
+
     def calc_num_density(self,density):
         '''
         Calculates the number density (in num per Ang^3) using the 
