@@ -1,6 +1,6 @@
 [project]
 name = "SeanFunctions"
-version = "v0.5.4-beta0"
+version = "v0.5.4-beta1"
 # dynamic = ["version"]
 authors = [
   { name="Sean Fayfar", email="sfayfar@gmail.com" },
@@ -57,7 +57,7 @@ write_to = "src/SeanFunctions/version.py"
 
 
 [tool.bumpver]
-current_version = "v0.5.4-beta0"
+current_version = "v0.5.4-beta1"
 version_pattern = "vMAJOR.MINOR.PATCH[-TAGNUM]"
 commit_message = "bump version to {new_version}"
 commit = true
