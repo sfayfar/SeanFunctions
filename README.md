@@ -8,5 +8,5 @@ This is a collection of python functions that have been useful
 pip install SeanFunctions
 
 ## Version number
-current version = 'v0.5.4-beta0'
+current version = 'v0.5.4-beta1'
 
