@@ -14,5 +14,5 @@ To install the function use
 The required packages should automatically be installed.
 
 ## Version number
-current version = 'v0.5.4-beta1'
+current version = 'v0.5.4'
 
