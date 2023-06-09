@@ -15,8 +15,8 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.mit.edu/sfayfar/SeanFunctions"
-"Bug Tracker" = "https://github.mit.edu/sfayfar/SeanFunctions/issues"
+Homepage = "https://github.com/sfayfar/SeanFunctions"
+"Bug Tracker" = "https://github.com/sfayfar/SeanFunctions/issues"
 
 
 [options]
