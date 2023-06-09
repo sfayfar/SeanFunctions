@@ -60,8 +60,8 @@ write_to = "src/SeanFunctions/version.py"
 current_version = "v0.5.4-beta0"
 version_pattern = "vMAJOR.MINOR.PATCH[-TAGNUM]"
 commit_message = "bump version {old_version} -> {new_version}"
-commit = false
-tag = false
+commit = true
+tag = true
 push = false
 
 [tool.bumpver.file_patterns]
