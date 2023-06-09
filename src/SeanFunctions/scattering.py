@@ -124,7 +124,7 @@ def neutron_scattering_lengths(rawTable=False):
 
 class weight_RDF_for_scattering:
     
-    def __init__(self,RDF_DataFrame,composition,cutoffR=None,isotopeDict=None,ionsDict=None,interpType='cubic',interpAmount=10):
+    def __init__(self,RDF_DataFrame,composition,cutoffR=None,isotopeDict=None,ionsDict=None,interpType='cubic',interpAmount=10,xrayRCut=100):
         '''
         Converts molecular dynamics partial RDFs into weighted g(r) and S(Q) for neutron and X-ray scattering.
         The input RDF must be a Pandas DataFrame with the column names as the atomic pairs such as "F-F" or "Na-Cl".
@@ -288,9 +288,9 @@ class weight_RDF_for_scattering:
         self.gofrXray = pd.DataFrame()
         # self.gofrXray['r'] = RDF_DataFrame.iloc[:,0]
         totalgofr = 0
-        cutAt100InvAng = find_nearest(self.SofQXray['Q'],100)[0]
+        cutAt100InvAng = find_nearest(self.SofQXray['Q'],xrayRCut)[0]
         for column in RDF_DataFrame.keys()[1:]:
-            r, gofr = fourierbesseltransform(self.SofQXray['Q'].iloc[:cutAt100InvAng:10].to_numpy(),self.SofQXray[column].iloc[:cutAt100InvAng:10].to_numpy(),unpack=True)
+            r, gofr = fourierbesseltransform(self.SofQXray['Q'].iloc[:cutAt100InvAng:interpAmount].to_numpy(),self.SofQXray[column].iloc[:cutAt100InvAng:interpAmount].to_numpy(),unpack=True)
             self.gofrXray['r'] = r
             self.gofrXray[column] = gofr * 2 / np.pi
             totalgofr += gofr * 2 / np.pi
