@@ -1,6 +1,6 @@
 [project]
 name = "SeanFunctions"
-version = "0.5.3"
+version = "v0.5.4-beta0"
 # dynamic = ["version"]
 authors = [
   { name="Sean Fayfar", email="sfayfar@gmail.com" },
@@ -12,6 +12,13 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy",
+    "scipy",
+    "lmfit",
+    "uncertainties",
+    "mendeleev"
 ]
 
 [project.urls]
@@ -25,17 +32,14 @@ python_requires = ">=3.7"
 setup_requires = "setuptools_scm"
 package_dir = "src"
 include_package_data = "True"
-install_requires = [
-    "numpy",
-    "scipy",
-    "pathlib",
-    "lmfit",
-    "uncertainties",
-    "mendeleev"
-]
+# install_requires = [
+#     "numpy",
+#     "scipy",
+#     "lmfit",
+#     "uncertainties",
+#     "mendeleev"
+# ]
 
-# [tool.setuptools.packages.find]
-# where = ["src"]
 
 [tool.setuptools.package-data]
 "SeanFunctions.Data" = ["*.csv"]
@@ -50,3 +54,20 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
 write_to = "src/SeanFunctions/version.py"
+
+
+[tool.bumpver]
+current_version = "v0.5.4-beta0"
+version_pattern = "vMAJOR.MINOR.PATCH[-TAGNUM]"
+commit_message = "bump version {old_version} -> {new_version}"
+commit = false
+tag = false
+push = false
+
+[tool.bumpver.file_patterns]
+"pyproject.toml" = [
+    'version = "{version}"',
+]
+"src/SeanFunctions/__init__.py" = ['__version__ = "{version}"']
+"README.md" = ['{version}']
+
