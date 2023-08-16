@@ -35,7 +35,7 @@ def fitPeak(
         Whether to add a constant background value to the fit.
 
     ampParams : dict, optional
-        Dictionary of optional keyword args for the amplitude param
+        Dictionary of optional keyword args for the amplitude param.
 
     centParams : dict, optional
         Dictionary of optional keyword args for the center param
