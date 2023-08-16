@@ -31,7 +31,7 @@ def find_nearest(array, value):
 
 def discrete_integral(data):
     """
-    Calculate a continuous discrete integral of data using the simpson method
+    Calculate a continuous discrete integral of data using the simpson method.
 
     Parameters
     ----------
