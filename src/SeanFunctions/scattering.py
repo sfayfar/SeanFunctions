@@ -112,7 +112,7 @@ def neutron_scattering_lengths(rawTable=False):
     7         barn    total bound scattering cross section
     8         barn    absorption cross section for 2200 m/s neutrons
 
-    Note: 1 fm = 1E-15 m, 1 barn = 1E-24 cm^2, scattering legnths and cross sections in parenthesis are uncertainties
+    Note: 1 fm = 1E-15 m, 1 barn = 1E-24 cm^2, scattering legnths and cross sections in parenthesis are uncertainties.
     """
 
     from pkg_resources import resource_stream
