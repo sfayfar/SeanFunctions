@@ -284,34 +284,41 @@ class weight_RDF_for_scattering:
         )
 
         # First Fourier transform the partial RDFs to partial SofQs
-        # totalUnweightedSofQ = 0
         self.unweightedSofQ = pd.DataFrame()
-        # self.unweightedSofQ_nointerp = pd.DataFrame()
         for column in RDF_DataFrame.keys()[1:]:
             Q, SofQ = fourierbesseltransform(
                 RDF_DataFrame.iloc[:, 0], RDF_DataFrame[column] - 1, unpack=True
             )
-            # self.unweightedSofQ_nointerp['Q'] = Q
-            # self.unweightedSofQ_nointerp[column] = SofQ
             SofQ_interp = interp1d(
                 Q, SofQ, kind=interpType, bounds_error=False, fill_value=np.nan
             )(self.QArrInterp)
             self.unweightedSofQ["Q"] = self.QArrInterp
             self.unweightedSofQ[column] = SofQ_interp
-        #     totalUnweightedSofQ += self.unweightedSofQ[column]
-        # self.unweightedSofQ['Total'] = totalUnweightedSofQ
 
-        # Neutron weighting
-        self.weightArrayNeutron = {}
-        self.weightTotalNeutron = 0
-        for column in RDF_DataFrame.keys()[1:]:
+        def _weighting(self,df,type="b"):
+            weightArray = {}
+            weightTotal = 0
+            for column in df.keys()[1:]:
             atoms = column.split("-")
             weighting = np.prod(
                 self.compositionTable.loc[atoms].conc.values
-                * self.compositionTable.loc[atoms].b.values
+                * self.compositionTable.loc[atoms]['b'].values
             ) * (2 - 1 * (atoms[0] == atoms[1]))
-            self.weightArrayNeutron[column] = weighting
-            self.weightTotalNeutron += weighting
+            weightArray[column] = weighting
+            weightTotal += weighting
+            return weightArray, weightTotal
+
+
+        # Neutron weighting
+        self.weightArrayNeutron, self.weightTotalNeutron = _weighting(RDF_DataFrame,type="b")
+        # for column in RDF_DataFrame.keys()[1:]:
+        #     atoms = column.split("-")
+        #     weighting = np.prod(
+        #         self.compositionTable.loc[atoms].conc.values
+        #         * self.compositionTable.loc[atoms].b.values
+        #     ) * (2 - 1 * (atoms[0] == atoms[1]))
+        #     self.weightArrayNeutron[column] = weighting
+        #     self.weightTotalNeutron += weighting
 
         # Neutron gofr
         self.gofrNeutron = pd.DataFrame()
@@ -340,16 +347,15 @@ class weight_RDF_for_scattering:
         self.SofQNeutron["Total"] = totalSofQ
 
         # X-ray weighting
-        self.weightArrayXray = {}
-        self.weightTotalXray = 0
-        for column in RDF_DataFrame.keys()[1:]:
-            atoms = column.split("-")
-            weighting = np.prod(
-                self.compositionTable.loc[atoms].conc.values
-                * self.compositionTable.loc[atoms].aff.values
-            ) * (2 - 1 * (atoms[0] == atoms[1]))
-            self.weightArrayXray[column] = weighting
-            self.weightTotalXray += weighting
+        self.weightArrayXray, self.weightTotalXray = _weighting(RDF_DataFrame,type="aff")
+        # for column in RDF_DataFrame.keys()[1:]:
+        #     atoms = column.split("-")
+        #     weighting = np.prod(
+        #         self.compositionTable.loc[atoms].conc.values
+        #         * self.compositionTable.loc[atoms].aff.values
+        #     ) * (2 - 1 * (atoms[0] == atoms[1]))
+        #     self.weightArrayXray[column] = weighting
+        #     self.weightTotalXray += weighting
 
         # X-ray SofQ
         self.SofQXray = pd.DataFrame()
