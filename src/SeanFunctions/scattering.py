@@ -1,3 +1,9 @@
+'''
+scattering.py
+----
+Collection of tools useful to neutron and X-ray scattering
+'''
+
 import pandas as pd
 import numpy as np
 import re
