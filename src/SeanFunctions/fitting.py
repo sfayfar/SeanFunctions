@@ -1,11 +1,21 @@
-import numpy as np
 import lmfit as lm
+import numpy as np
 
 
-def fitPeak(data,xleft,xright,peakType='Gaussian',constant=False,ampParams=None,centParams=None,constParams=None,gammaParams=None):
-    '''
+def fitPeak(
+    data,
+    xleft,
+    xright,
+    peakType="Gaussian",
+    constant=False,
+    ampParams=None,
+    centParams=None,
+    constParams=None,
+    gammaParams=None,
+):
+    """
     Fit data to a peak model with the provided bounds and the addition of a constant background term
-    
+
     Parameters
     --------
     data : array_like
@@ -40,7 +50,7 @@ def fitPeak(data,xleft,xright,peakType='Gaussian',constant=False,ampParams=None,
     Returns
     --------
     fitResult : lmfit ModelResult object
-        The ModelResult contains the fitting results created by lmfit. 
+        The ModelResult contains the fitting results created by lmfit.
 
 
 
@@ -76,61 +86,61 @@ def fitPeak(data,xleft,xright,peakType='Gaussian',constant=False,ampParams=None,
     Step
     Rectangle
     Expression
-    
-    '''
-    
+
+    """
+
     if peakType not in lm.models.lmfit_models.keys():
         keyList = []
         for keys in lm.models.lmfit_models.keys():
             keyList.append(keys)
-        raise ValueError('Peak types:',' '.join(keyList))
-    
-    datax = data[:,0]
-    datay = data[:,1]
-    
+        raise ValueError("Peak types:", " ".join(keyList))
+
+    datax = data[:, 0]
+    datay = data[:, 1]
+
     modPeak = lm.models.lmfit_models[peakType]()
     modConst = lm.models.ConstantModel()
     if constant:
         modCombined = modPeak + modConst
     else:
         modCombined = modPeak
-    
+
     dataLocations = np.where((datax >= xleft) & (datax <= xright))[0]
-    
+
     fitx = datax[dataLocations]
     fity = datay[dataLocations]
-    
-    params = modPeak.guess(fity,x=fitx)
+
+    params = modPeak.guess(fity, x=fitx)
     if constant:
-        params += modConst.guess(fity,x=fitx)
+        params += modConst.guess(fity, x=fitx)
         if constParams is not None:
-            params['c'].set(**constParams)
+            params["c"].set(**constParams)
         else:
-            params['c'].set(min=0,max=np.max(fity))
-        
+            params["c"].set(min=0, max=np.max(fity))
+
     if ampParams is not None:
-        params['amplitude'].set(**ampParams)
-        
+        params["amplitude"].set(**ampParams)
+
     if centParams is not None:
-        params['center'].set(**centParams)
+        params["center"].set(**centParams)
 
     if gammaParams is not None:
-        params['gamma'].set(**gammaParams)
-    
-    fitResult = modCombined.fit(fity,params,x=fitx)
-    
+        params["gamma"].set(**gammaParams)
+
+    fitResult = modCombined.fit(fity, params, x=fitx)
+
     return fitResult
 
 
-def find_max(fitfunction,bounds,min=False,evalUnc=True,params=None):
-    '''
+def find_max(fitfunction, bounds, min=False, evalUnc=True, params=None):
+    """
     Finds the maximum value of a Gaussian shaped function determined through a fit
 
     Parameters
     ---------
     fitfunction : lmfit fitted class
         Fitting result from lmfit
-    
+
     bounds : array_like
         A list of the bounds where the peak is located.
 
@@ -147,21 +157,21 @@ def find_max(fitfunction,bounds,min=False,evalUnc=True,params=None):
     modGaus = lmfit.models.Gaussian()
     result = modGaus.fit(y,params,x=x)
     maximum = find_max(result,[1,2])
-        '''
+    """
     from scipy.optimize import minimize_scalar
-    
+
     if min:
         scale = 1
     else:
         scale = -1
 
-
     def function(xvalue):
-        return scale * fitfunction.eval(x=xvalue,params=params)
-    xvalue = minimize_scalar(function,bounds=bounds,method='bounded').x
-    maxvalue = fitfunction.eval(x=xvalue,params=params)
+        return scale * fitfunction.eval(x=xvalue, params=params)
+
+    xvalue = minimize_scalar(function, bounds=bounds, method="bounded").x
+    maxvalue = fitfunction.eval(x=xvalue, params=params)
     if evalUnc:
-        maxvalueunc = fitfunction.eval_uncertainty(x=xvalue,params=params)[0]
+        maxvalueunc = fitfunction.eval_uncertainty(x=xvalue, params=params)[0]
         out = np.array([xvalue, maxvalue, maxvalueunc])
     else:
         out = np.array([xvalue, maxvalue])
@@ -169,7 +179,7 @@ def find_max(fitfunction,bounds,min=False,evalUnc=True,params=None):
 
 
 def convertToUncFloat(paramResult):
-    '''
+    """
     Converts a parameter output from lmfit to a uncertainties ufloat.
 
     Parameters
@@ -182,9 +192,9 @@ def convertToUncFloat(paramResult):
     ------
     out : ufloat
         Returns a uncertainties ufloat value.
-    '''
+    """
     from uncertainties import ufloat
 
-    out = ufloat(paramResult.value,paramResult.stderr)
+    out = ufloat(paramResult.value, paramResult.stderr)
 
     return out
