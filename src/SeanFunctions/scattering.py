@@ -169,7 +169,7 @@ class weight_RDF_for_scattering:
 
         isotopeDict : dict, optional
                     Add the isotopes of each atom as a Python dictionary.
-                    The dict must start with the atom then include isotopes.
+                    The dict must start with the atom then include isotopes
                     The total must sum to 1.
                     Ex: {'Li':{'7Li':0.9,'6Li':0.1}}
 
