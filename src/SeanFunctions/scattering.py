@@ -1,7 +1,7 @@
 """
 scattering.py
 ----
-Collection of tools useful to neutron and X-ray scattering
+Collection of tools useful to neutron and X-ray scattering.
 """
 
 import re
