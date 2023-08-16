@@ -1,4 +1,5 @@
 # SeanFunctions python package
+[![GitHub Super-Linter](https://github.com/sfayfar/SeanFunctions/actions/workflows/super-linter.yml/badge.svg)](https://github.com/marketplace/actions/super-linter)
 ![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/sfayfar/SeanFunctions)
 ![PyPI](https://img.shields.io/pypi/v/SeanFunctions)
 
