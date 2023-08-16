@@ -1,8 +1,8 @@
-'''
+"""
 scattering.py
 ----
 Collection of tools useful to neutron and X-ray scattering
-'''
+"""
 
 import pandas as pd
 import numpy as np
@@ -12,12 +12,11 @@ from scipy.interpolate import interp1d
 from scipy import constants
 from matplotlib import pyplot as plt
 from .math import find_nearest, fourierbesseltransform
-# from importlib import resources
-# import io
+
 
 
 def atomic_form_factor_constants():
-    '''
+    """
     Outputs a DataFrame of the coefficients for the analytical approximation to the atomic form factors. 
     The coefficients were taken from the International Tables for Crystallography at:
     http://it.iucr.org/Cb/ch6o1v0001/
@@ -31,7 +30,7 @@ def atomic_form_factor_constants():
     --------
     aff_DF : Pandas DataFrame
         contains the coefficients to use the analytical approximation of the atomic form factors. 
-    '''
+    """
     from pkg_resources import resource_stream
 
     stream = resource_stream(__name__,'Data/AtomicFormFactorConstants.csv')
@@ -41,7 +40,7 @@ def atomic_form_factor_constants():
 
 
 def atomic_form_factor(atom,QList,inputCoeff=None):
-    '''
+    """
     Returns the Q dependent atomic form factor for each of the elements and ions. 
     The coefficients were taken from the International Tables for Crystallography at:
     http://it.iucr.org/Cb/ch6o1v0001/
@@ -59,7 +58,7 @@ def atomic_form_factor(atom,QList,inputCoeff=None):
 
     inputCoeff : array_like, optional
         Optionally input the coefficients manually rather than use the values from the table.
-    '''
+    """
 
     aff_DF = atomic_form_factor_constants()
 
@@ -78,7 +77,7 @@ def atomic_form_factor(atom,QList,inputCoeff=None):
 
 
 def neutron_scattering_lengths(rawTable=False):
-    '''
+    """
     Returns a DataFrame of all the neutron scattering lengths. 
     The neutron scattering lengths were taken from:
     https://www.nist.gov/ncnr/neutron-scattering-lengths-list
@@ -106,7 +105,7 @@ def neutron_scattering_lengths(rawTable=False):
     8         barn    absorption cross section for 2200 m/s neutrons
 
     Note: 1 fm = 1E-15 m, 1 barn = 1E-24 cm^2, scattering legnths and cross sections in parenthesis are uncertainties
-    '''
+    """
 
     from pkg_resources import resource_stream
 
@@ -131,7 +130,7 @@ def neutron_scattering_lengths(rawTable=False):
 class weight_RDF_for_scattering:
     
     def __init__(self,RDF_DataFrame,composition,cutoffR=None,isotopeDict=None,ionsDict=None,interpType='cubic',interpAmount=10,xrayRCut=100):
-        '''
+        """
         Converts molecular dynamics partial RDFs into weighted g(r) and S(Q) for neutron and X-ray scattering.
         The input RDF must be a Pandas DataFrame with the column names as the atomic pairs such as "F-F" or "Na-Cl".
 
@@ -175,7 +174,7 @@ class weight_RDF_for_scattering:
         partialRDF : DataFrame
 
         unweightedSofQ : DataFrame
-        '''
+        """
         self.isotopeDict = isotopeDict
         self.ionsDict = ionsDict
         neutronScatteringLengths = neutron_scattering_lengths()
@@ -350,7 +349,7 @@ class weight_RDF_for_scattering:
                 ax.plot(self.QArrInterp,self.compositionTable.aff[atoms],'-',lw=1,label=labelValue+' aff',**kwargs)
 
     def calc_num_density(self,density):
-        '''
+        """
         Calculates the number density (in num per Ang^3) using the 
         chemical formula and input density.
 
@@ -362,6 +361,6 @@ class weight_RDF_for_scattering:
         Returns
         -------
         num_density : float
-        '''
+        """
         num_density = constants.Avogadro/10**24 * density / np.sum([self.compositionTable.conc * self.compositionTable.amu])
         return num_density
