@@ -189,7 +189,7 @@ class weight_RDF_for_scattering:
         Returns
         --------
         compositionTable : DataFrame
-                        DateFrame containing the composition, b, and f(Q) values
+                        DateFrame containing the composition, b, and f(Q) values.
 
         partialRDF : DataFrame
 
