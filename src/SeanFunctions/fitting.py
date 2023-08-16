@@ -38,7 +38,7 @@ def fitPeak(
         Dictionary of optional keyword args for the amplitude param.
 
     centParams : dict, optional
-        Dictionary of optional keyword args for the center param
+        Dictionary of optional keyword args for the center param.
 
     gammaParams : dict, optional
         Dictionary of optional keyword args for the gamma param
