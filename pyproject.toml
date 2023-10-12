@@ -26,13 +26,6 @@ Homepage = "https://github.com/sfayfar/SeanFunctions"
 "Bug Tracker" = "https://github.com/sfayfar/SeanFunctions/issues"
 
 
-[options]
-packages = "find:"
-python_requires = ">=3.7"
-setup_requires = "setuptools_scm"
-package_dir = "src"
-include_package_data = "True"
-
 
 [tool.setuptools.package-data]
 "SeanFunctions.Data" = ["*.csv"]
