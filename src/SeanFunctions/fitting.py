@@ -13,6 +13,7 @@ def fitPeak(
     centParams=None,
     constParams=None,
     gammaParams=None,
+    skewParams=None,
 ):
     """
     Fit data to a peak model with the provided bounds and the addition of a constant background term
@@ -50,6 +51,9 @@ def fitPeak(
 
     constParams : dict, optional
         Dictionary of optional keyword args for the constant param
+
+    skewParams : dict, optional
+        Dictionary of optional keyword args for the skew param
 
 
     Returns
@@ -141,6 +145,9 @@ def fitPeak(
 
     if gammaParams is not None:
         params["gamma"].set(**gammaParams)
+
+    if skewParams is not None:
+        params["skew"].set(**skewParams)
 
     kwargs = {}
     if dataErr is not None:
