@@ -6,7 +6,7 @@ def fitPeak(
     data,
     xleft,
     xright,
-    weight=True
+    weight=True,
     peakType="Gaussian",
     constant=False,
     ampParams=None,
@@ -135,7 +135,11 @@ def fitPeak(
     if gammaParams is not None:
         params["gamma"].set(**gammaParams)
 
-    fitResult = modCombined.fit(fity, params, x=fitx,weight=1/dataErr)
+    kwargs = {}
+    if dataErr is not None:
+        kwargs['weight'] = 1/dataErr
+
+    fitResult = modCombined.fit(fity, params, x=fitx,**kwargs)
 
     return fitResult
 
