@@ -103,8 +103,10 @@ def fitPeak(
     datax = data[:, 0]
     datay = data[:, 1]
     if isinstance(weight,bool):
-        if (data.shape[1] == 3) & weight:
+        if (data.shape[1] == 3) and weight:
             dataErr = data[:,2]
+        else:
+            dataErr = None
     elif isinstance(weight,(list,tuple,np.ndarray)):
         dataErr = weight
     else:
