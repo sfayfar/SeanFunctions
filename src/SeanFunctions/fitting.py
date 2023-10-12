@@ -28,6 +28,10 @@ def fitPeak(
     xright : float
         Right boundary of the data to fit.
 
+    weight : bool, or array
+        True/False whether to use third data column to weight the fitting
+        Or input array to use to weight the fitting as 1/yerr
+
     peakType : str, optional
         The type of peak to use for the fit. The default choice is a Gaussian model.
         All models are listed below.
@@ -98,8 +102,9 @@ def fitPeak(
 
     datax = data[:, 0]
     datay = data[:, 1]
-    if weight and (data.shape[1] == 3):
-        dataErr = data[:,2]
+    if isinstance(weight,bool):
+        if (data.shape[1] == 3) & weight:
+            dataErr = data[:,2]
     elif isinstance(weight,(list,tuple,np.ndarray)):
         dataErr = weight
     else:
