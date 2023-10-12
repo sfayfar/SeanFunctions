@@ -6,6 +6,7 @@ def fitPeak(
     data,
     xleft,
     xright,
+    weight=True
     peakType="Gaussian",
     constant=False,
     ampParams=None,
@@ -97,6 +98,12 @@ def fitPeak(
 
     datax = data[:, 0]
     datay = data[:, 1]
+    if weight and (data.shape[1] == 3):
+        dataErr = data[:,2]
+    elif isinstance(weight,(list,tuple,np.ndarray)):
+        dataErr = weight
+    else:
+        dataErr = None
 
     modPeak = lm.models.lmfit_models[peakType]()
     modConst = lm.models.ConstantModel()
@@ -109,6 +116,7 @@ def fitPeak(
 
     fitx = datax[dataLocations]
     fity = datay[dataLocations]
+    
 
     params = modPeak.guess(fity, x=fitx)
     if constant:
@@ -127,7 +135,7 @@ def fitPeak(
     if gammaParams is not None:
         params["gamma"].set(**gammaParams)
 
-    fitResult = modCombined.fit(fity, params, x=fitx)
+    fitResult = modCombined.fit(fity, params, x=fitx,weight=1/dataErr)
 
     return fitResult
 
