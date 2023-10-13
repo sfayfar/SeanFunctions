@@ -302,7 +302,7 @@ class weight_RDF_for_scattering:
                 atoms = column.split("-")
                 weighting = np.prod(
                     self.compositionTable.loc[atoms].conc.values
-                    * self.compositionTable.loc[atoms]["b"].values
+                    * self.compositionTable.loc[atoms][type].values
                 ) * (2 - 1 * (atoms[0] == atoms[1]))
                 weightArray[column] = weighting
                 weightTotal += weighting
