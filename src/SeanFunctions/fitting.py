@@ -197,7 +197,9 @@ def find_max(fitfunction, bounds, min=False, evalUnc=True, params=None):
     xvalue = minimize_scalar(function, bounds=bounds, method="bounded").x
     maxvalue = fitfunction.eval(x=xvalue, params=params)
     if evalUnc:
-        maxvalueunc = fitfunction.eval_uncertainty(x=xvalue, params=params)[0]
+        maxvalueunc = fitfunction.eval_uncertainty(x=xvalue, params=params)
+        if isinstance(maxvalueunc, np.ndarray):
+            maxvalueunc = maxvalueunc[0]
         out = np.array([xvalue, maxvalue, maxvalueunc])
     else:
         out = np.array([xvalue, maxvalue])
