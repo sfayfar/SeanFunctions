@@ -8,6 +8,7 @@ def fitPeak(
     xright,
     weight=True,
     peakType="Gaussian",
+    params=None,
     constant=False,
     ampParams=None,
     centParams=None,
@@ -36,6 +37,10 @@ def fitPeak(
     peakType : str, optional
         The type of peak to use for the fit. The default choice is a Gaussian model.
         All models are listed below.
+
+    params : lmfit Parameters object, optional
+        The initial parameters to use for the fit. If None, the initial parameters are guessed.
+        Useful for inputting previous fit results on a sequence of fits. 
 
     constant : bool, optional
         Whether to add a constant background value to the fit.
@@ -129,7 +134,8 @@ def fitPeak(
     fity = datay[dataLocations]
     
 
-    params = modPeak.guess(fity, x=fitx)
+    params = modPeak.guess(fity, x=fitx) if params is None else params
+
     if constant:
         params += modConst.guess(fity, x=fitx)
         if constParams is not None:
