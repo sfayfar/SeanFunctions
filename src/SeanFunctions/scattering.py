@@ -359,18 +359,29 @@ class weight_RDF_for_scattering:
 
         # X-ray gofr
         self.gofrXray = pd.DataFrame()
-        # self.gofrXray['r'] = RDF_DataFrame.iloc[:,0]
         totalgofr = 0
-        cutAt100InvAng = find_nearest(self.SofQXray["Q"], xrayRCut)[0]
+
+        # Sample the Q and S(Q) arrays with the given interpAmount
+        Q_sampled = self.SofQXray["Q"].iloc[::interpAmount].to_numpy()
+        # find nearest index in the sampled Q array to the requested cut
+        cut_sample_idx = find_nearest(Q_sampled, xrayRCut)[0]
+
         for column in RDF_DataFrame.keys()[1:]:
-            r, gofr = fourierbesseltransform(
-                self.SofQXray["Q"].iloc[:cutAt100InvAng:interpAmount].to_numpy(),
-                self.SofQXray[column].iloc[:cutAt100InvAng:interpAmount].to_numpy(),
-                unpack=True,
-            )
+            S_sampled = self.SofQXray[column].iloc[::interpAmount].to_numpy()
+            # apply the sinc window (sin(pi*x)/(pi*x)) safely using numpy.sinc
+            window = np.sinc(Q_sampled / xrayRCut)
+            S_windowed = S_sampled * window
+
+            # zero everything at and beyond the cut index instead of truncating
+            if cut_sample_idx < len(S_windowed):
+                S_windowed[cut_sample_idx:] = 0
+
+            r, gofr = fourierbesseltransform(Q_sampled, S_windowed, unpack=True)
+
             self.gofrXray["r"] = r
             self.gofrXray[column] = gofr * 2 / np.pi
             totalgofr += gofr * 2 / np.pi
+
         self.gofrXray["Total"] = totalgofr
 
     def plot_SofQNeutron(self, axes=None, **kwargs):
