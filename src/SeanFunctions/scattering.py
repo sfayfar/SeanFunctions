@@ -5,6 +5,7 @@ Collection of tools useful to neutron and X-ray scattering.
 """
 
 import re
+from importlib import resources
 
 import mendeleev as pTable
 import numpy as np
@@ -14,6 +15,13 @@ from scipy import constants
 from scipy.interpolate import interp1d
 
 from .math import find_nearest, fourierbesseltransform
+
+
+def _read_data_csv(filename):
+    """Read a packaged CSV from SeanFunctions/Data."""
+    data_file = resources.files(__package__).joinpath("Data", filename)
+    with data_file.open("rb") as stream:
+        return pd.read_csv(stream)
 
 
 def atomic_form_factor_constants():
@@ -35,11 +43,7 @@ def atomic_form_factor_constants():
         contains the coefficients to use the analytical approximation of the atomic form factors.
 
     """
-    from pkg_resources import resource_stream
-
-    stream = resource_stream(__name__, "Data/AtomicFormFactorConstants.csv")
-    aff_DF = pd.read_csv(stream)
-    return aff_DF
+    return _read_data_csv("AtomicFormFactorConstants.csv")
 
 
 def atomic_form_factor(atom, QList, inputCoeff=None):
@@ -115,15 +119,11 @@ def neutron_scattering_lengths(rawTable=False):
     Note: 1 fm = 1E-15 m, 1 barn = 1E-24 cm^2, scattering legnths and cross sections in parenthesis are uncertainties.
     """
 
-    from pkg_resources import resource_stream
-
     if rawTable:
-        stream = resource_stream(__name__, "Data/NeutronScatteringLengths.csv")
-        nsl_DF = pd.read_csv(stream)
+        nsl_DF = _read_data_csv("NeutronScatteringLengths.csv")
         return nsl_DF
 
-    stream = resource_stream(__name__, "Data/NeutronScatteringLengths_Corrected.csv")
-    nsl_DF = pd.read_csv(stream).astype(
+    nsl_DF = _read_data_csv("NeutronScatteringLengths_Corrected.csv").astype(
         {
             "Isotope": "string",
             "Conc": np.float64,
@@ -383,6 +383,43 @@ class weight_RDF_for_scattering:
             totalgofr += gofr * 2 / np.pi
 
         self.gofrXray["Total"] = totalgofr
+
+    def calc_NOMAD_prefactor(self, num_density:float=None, density:float=None):
+        """
+        Calculates the prefactor for the NOMAD format for S(Q). The prefactor is 4 * pi * sum_i (c_i * b_i)**2 / sum_i (c_i * b_i**2) where c_i is the concentration and b_i is the neutron scattering length of each atom.
+
+        Parameters
+        ---------
+        num_density : float, optional
+                    The number density of the material in num per Ang^3.
+                    If not inputed then it will be calculated using the composition and density.
+
+        density : float, optional
+                The density of the material at the desired temperature in g/cm^3.
+                Required if num_density is not inputed.
+
+        Returns
+        -------
+        prefactor : float
+                    The prefactor to convert S(Q) and g(r) to the NOMAD format.
+        """
+        if num_density is None:
+            if density is None:
+                raise ValueError(
+                    "Either num_density or density must be inputed to calculate the prefactor."
+                )
+            else:
+                num_density = self.calc_num_density(density)
+
+        sum_c_b_total_squared = np.sum(
+            self.compositionTable.conc * self.compositionTable.b
+        ) ** 2
+        sum_c_b_squared = np.sum(
+            self.compositionTable.conc * self.compositionTable.b**2
+        )
+
+        prefactor = 4 * np.pi * num_density * sum_c_b_total_squared / sum_c_b_squared
+        return prefactor
 
     def plot_SofQNeutron(self, axes=None, **kwargs):
         ax = plt.axes(axes)
