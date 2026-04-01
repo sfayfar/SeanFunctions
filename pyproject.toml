@@ -1,6 +1,6 @@
 [project]
 name = "SeanFunctions"
-version = "v0.5.9"
+version = "v0.6.0"
 # dynamic = ["version"]
 authors = [
   { name="Sean Fayfar", email="sfayfar@gmail.com" },
@@ -18,17 +18,12 @@ dependencies = [
     "scipy",
     "lmfit",
     "uncertainties",
-    "mendeleev"
+    "periodictable"
 ]
 
 [project.urls]
 Homepage = "https://github.com/sfayfar/SeanFunctions"
 "Bug Tracker" = "https://github.com/sfayfar/SeanFunctions/issues"
-
-
-
-[tool.setuptools.package-data]
-"SeanFunctions.Data" = ["*.csv"]
 
 [build-system]
 requires = [
@@ -48,12 +43,11 @@ build-backend = "setuptools.build_meta"
 
 
 [tool.bumpver]
-current_version = "v0.5.9"
+current_version = "v0.6.0"
 version_pattern = "vMAJOR.MINOR.PATCH[-TAGNUM]"
 commit_message = "bump version to {new_version}"
 commit = true
 tag = true
 push = true
-
 
 

@@ -5,11 +5,11 @@ Collection of tools useful to neutron and X-ray scattering.
 """
 
 import re
-from importlib import resources
 
-import mendeleev as pTable
 import numpy as np
 import pandas as pd
+import periodictable as pTable
+from periodictable.cromermann import fxrayatq
 from matplotlib import pyplot as plt
 from scipy import constants
 from scipy.interpolate import interp1d
@@ -17,40 +17,164 @@ from scipy.interpolate import interp1d
 from .math import find_nearest, fourierbesseltransform
 
 
-def _read_data_csv(filename):
-    """Read a packaged CSV from SeanFunctions/Data."""
-    data_file = resources.files(__package__).joinpath("Data", filename)
-    with data_file.open("rb") as stream:
-        return pd.read_csv(stream)
+ION_RE = re.compile(r"^([A-Z][a-z]?)(?:(\d*)([+-]))?$")
+ISOTOPE_RE = re.compile(r"^(?:(\d+)([A-Z][a-z]?)|([A-Z][a-z]?)(\d+))$")
 
 
-def atomic_form_factor_constants():
-    """
+def _parse_ion_symbol(atom):
+    match = ION_RE.fullmatch(atom)
+    if match is None:
+        raise ValueError(
+            f"Invalid atom or ion '{atom}'. Expected forms like 'O', 'Ca2+', or 'H1-'."
+        )
 
-    Outputs a DataFrame of the coefficients for the analytical approximation to the atomic form factors.
-    The coefficients were taken from the International Tables for Crystallography at:
-    http://it.iucr.org/Cb/ch6o1v0001/
+    symbol, magnitude, sign = match.groups()
+    charge = None
+    if sign is not None:
+        charge = int(magnitude) if magnitude else 1
+        if sign == "-":
+            charge *= -1
 
-    Parameters
-    -------
-    nothing
-
-
-
-    Returns
-    --------
-    aff_DF : Pandas DataFrame
-        contains the coefficients to use the analytical approximation of the atomic form factors.
-
-    """
-    return _read_data_csv("AtomicFormFactorConstants.csv")
+    return symbol, charge
 
 
-def atomic_form_factor(atom, QList, inputCoeff=None):
+def _get_element(symbol):
+    try:
+        return pTable.elements.symbol(symbol)
+    except ValueError as exc:
+        raise ValueError(f"Unsupported element symbol '{symbol}'.") from exc
+
+
+def _get_neutron_scattering_length(symbol):
+    element = _get_element(symbol)
+    neutron = element.neutron
+    if neutron is None or neutron.b_c is None:
+        raise ValueError(
+            f"No neutron coherent scattering length is available for '{symbol}'."
+        )
+    return np.real(neutron.b_c)
+
+
+def _parse_isotope_label(isotope):
+    match = ISOTOPE_RE.fullmatch(isotope)
+    if match is None:
+        raise ValueError(
+            f"Invalid isotope '{isotope}'. Expected forms like '7Li' or 'Li7'."
+        )
+
+    leading_mass, leading_symbol, trailing_symbol, trailing_mass = match.groups()
+    if leading_symbol is not None:
+        return leading_symbol, int(leading_mass)
+    return trailing_symbol, int(trailing_mass)
+
+
+def _get_isotope_scattering_length(atom, isotope):
+    isotope_symbol, mass_number = _parse_isotope_label(isotope)
+    if isotope_symbol != atom:
+        raise ValueError(
+            f"Isotope '{isotope}' does not match atom '{atom}' in isotopeDict."
+        )
+
+    element = _get_element(atom)
+    neutron = element[mass_number].neutron
+    if neutron is None or neutron.b_c is None:
+        raise ValueError(
+            f"No neutron coherent scattering length is available for isotope '{isotope}'."
+        )
+    return np.real(neutron.b_c)
+
+
+def _parse_composition(composition, combine_duplicates=False):
+    comps = re.sub(r"([A-Z])", r" \1", composition.replace(" ", "")).split()
+
+    if combine_duplicates:
+        comp_dict = {}
+        for atoms in comps:
+            atom_arr = re.split(r"([0-9.]+)", atoms)[:2]
+            if len(atom_arr) == 1:
+                atom_arr.append(1)
+            comp_dict[atom_arr[0]] = comp_dict.get(atom_arr[0], 0.0) + float(
+                atom_arr[-1]
+            )
+        atom_arr = np.array(list(comp_dict.keys()), dtype="object")
+        conc_arr = np.array(list(comp_dict.values()), dtype=float)
+        return atom_arr, conc_arr
+
+    comp_arr = []
+    for atoms in comps:
+        atom_arr = re.split(r"([0-9.]+)", atoms)[:2]
+        if len(atom_arr) == 1:
+            atom_arr.append(1)
+        atom_arr[-1] = float(atom_arr[-1])
+        comp_arr.append(atom_arr)
+    comp_arr = np.array(comp_arr, dtype="object")
+    return comp_arr[:, 0], comp_arr[:, 1].astype(float)
+
+
+def _build_neutron_scattering_array(atom_arr, isotope_dict=None):
+    if isotope_dict is None:
+        return [_get_neutron_scattering_length(atom) for atom in atom_arr]
+
+    b_arr = []
+    for atom in atom_arr:
+        if atom in isotope_dict:
+            b_value = 0.0
+            for isotope, fraction in isotope_dict[atom].items():
+                b_value += fraction * _get_isotope_scattering_length(atom, isotope)
+            b_arr.append(b_value)
+        else:
+            b_arr.append(_get_neutron_scattering_length(atom))
+    return b_arr
+
+
+def _build_xray_scattering_array(atom_arr, q_arr, ions_dict=None):
+    aff_arr = []
+    for atom in atom_arr:
+        if ions_dict is not None and atom in ions_dict:
+            aff_arr.append(atomic_form_factor(atom + ions_dict[atom], q_arr))
+        else:
+            aff_arr.append(atomic_form_factor(atom, q_arr))
+    return aff_arr
+
+
+def _build_composition_table(atom_arr, conc_arr, q_arr, isotope_dict=None, ions_dict=None):
+    return pd.DataFrame(
+        {
+            "conc": conc_arr / np.sum(conc_arr),
+            "amu": [_get_element(atom).mass for atom in atom_arr],
+            "b": _build_neutron_scattering_array(atom_arr, isotope_dict=isotope_dict),
+            "aff": _build_xray_scattering_array(atom_arr, q_arr, ions_dict=ions_dict),
+        },
+        index=atom_arr,
+    )
+
+
+def _build_atomic_pairs(atoms):
+    atomic_pairs = []
+    for i in range(len(atoms)):
+        for j in range(i, len(atoms)):
+            atomic_pairs.append(f"{atoms[i]}-{atoms[j]}")
+    return atomic_pairs
+
+
+def _calc_weighting(composition_table, pair_names, type="b"):
+    weight_array = {}
+    weight_total = 0
+    for pair_name in pair_names:
+        atoms = pair_name.split("-")
+        weighting = np.prod(
+            composition_table.loc[atoms].conc.values
+            * composition_table.loc[atoms][type].values
+        ) * (2 - 1 * (atoms[0] == atoms[1]))
+        weight_array[pair_name] = weighting
+        weight_total += weighting
+    return weight_array, weight_total
+
+
+def atomic_form_factor(atom, QList):
     """
     Returns the Q dependent atomic form factor for each of the elements and ions.
-    The coefficients were taken from the International Tables for Crystallography at:
-    http://it.iucr.org/Cb/ch6o1v0001/
+    The values are calculated using periodictable's Cromer-Mann coefficients.
 
     Parameters
     -------
@@ -62,80 +186,15 @@ def atomic_form_factor(atom, QList, inputCoeff=None):
 
     QList : array_like
         The array of Q values that the atomic form factor will be calculated for.
-
-    inputCoeff : array_like, optional
-        Optionally input the coefficients manually rather than use the values from the table.
     """
-
-    aff_DF = atomic_form_factor_constants()
-
-    if atom not in aff_DF["element"].values:
-        print(
-            f"The atom '{atom}' is not available.\nThe available atoms are:\n",
-            "\t".join(map(str, aff_DF["element"].values)),
-        )
-    else:
-        if inputCoeff is None:
-            coeff_values = aff_DF[aff_DF["element"] == atom].iloc[:, 2:-2].values[0]
-        else:
-            coeff_values = inputCoeff
-        sumData = 0.0
-        for i in range(0, len(coeff_values) - 1, 2):
-            sumData += coeff_values[i] * np.exp(
-                -coeff_values[i + 1] * (QList / (4 * np.pi)) ** 2
-            )
-        sumData += coeff_values[-1]
-        return sumData
-
-
-def neutron_scattering_lengths(rawTable=False):
-    """
-    Returns a DataFrame of all the neutron scattering lengths.
-    The neutron scattering lengths were taken from:
-    https://www.nist.gov/ncnr/neutron-scattering-lengths-list
-
-    Parameters
-    --------
-    rawTable : bool, options
-        Set true to output the raw table imported from the above link.
-        Otherwise it will import a table with symbols removed (errors +/- values etc.)
-        and corrected data types.
-
-    Returns
-    -------
-    nsl_DF : DataFrame
-        Contains the neutron scattering lengths of all elements and isotopes.
-
-    Column    Unit    Quantity
-    1         ---     Isotope
-    2         ---     Natural abundance (for radioisotopes the half-life is given instead)
-    3         fm      bound coherent scattering length
-    4         fm      bound incoherent scattering length
-    5         barn    bound coherent scattering cross section
-    6         barn    bound incoherent scattering cross section
-    7         barn    total bound scattering cross section
-    8         barn    absorption cross section for 2200 m/s neutrons
-
-    Note: 1 fm = 1E-15 m, 1 barn = 1E-24 cm^2, scattering legnths and cross sections in parenthesis are uncertainties.
-    """
-
-    if rawTable:
-        nsl_DF = _read_data_csv("NeutronScatteringLengths.csv")
-        return nsl_DF
-
-    nsl_DF = _read_data_csv("NeutronScatteringLengths_Corrected.csv").astype(
-        {
-            "Isotope": "string",
-            "Conc": np.float64,
-            "Coh b": np.complex64,
-            "Inc b": np.complex64,
-            "Coh xs": np.float64,
-            "Inc xs": np.float64,
-            "Scatt xs": np.float64,
-            "Abs xs": np.float64,
-        }
-    )
-    return nsl_DF
+    symbol, charge = _parse_ion_symbol(atom)
+    _get_element(symbol)
+    try:
+        return fxrayatq(symbol, QList, charge=charge)
+    except Exception as exc:
+        raise ValueError(
+            f"Unable to calculate the atomic form factor for '{atom}'."
+        ) from exc
 
 
 class weight_RDF_for_scattering:
@@ -197,90 +256,25 @@ class weight_RDF_for_scattering:
         """
         self.isotopeDict = isotopeDict
         self.ionsDict = ionsDict
-        neutronScatteringLengths = neutron_scattering_lengths()
 
-        # First convert the inputed composition to an array with the atoms and their fractional composition
-        comps = re.sub(r"([A-Z])", r" \1", composition.replace(" ", "")).split()
-        compArr = []
-        for atoms in comps:
-            atomArr = re.split(r"([0-9.]+)", atoms)[:2]
-            if len(atomArr) == 1:
-                atomArr.append(1)
-            atomArr[-1] = float(atomArr[-1])
-            compArr.append(atomArr)
-        compArr = np.array(compArr, dtype="object")
-        atomArr = compArr[:, 0]
-        concArr = compArr[:, 1]
+        atomArr, concArr = _parse_composition(composition, combine_duplicates=True)
 
         if cutoffR is not None:
             cutoff = find_nearest(RDF_DataFrame.iloc[:, 0], cutoffR)[0]
             RDF_DataFrame = RDF_DataFrame.iloc[:cutoff, :]
         self.partialRDF = RDF_DataFrame.rename(columns={RDF_DataFrame.keys()[0]: "r"})
 
-        if self.isotopeDict is not None:
-            bArr = []
-            for atoms in atomArr:
-                if atoms in self.isotopeDict.keys():
-                    bValue = 0
-                    for isotope in self.isotopeDict[atoms].keys():
-                        bValue += (
-                            self.isotopeDict[atoms][isotope]
-                            * neutronScatteringLengths.loc[
-                                neutronScatteringLengths["Isotope"].str.fullmatch(
-                                    isotope
-                                )
-                            ]["Coh b"]
-                            .values[0]
-                            .real
-                        )
-                    bArr.append(bValue)
-                else:
-                    bArr.append(
-                        neutronScatteringLengths.loc[
-                            neutronScatteringLengths["Isotope"].str.fullmatch(atoms)
-                        ]["Coh b"]
-                        .values[0]
-                        .real
-                    )
-        else:
-            bArr = [
-                neutronScatteringLengths.loc[
-                    neutronScatteringLengths["Isotope"].str.fullmatch(atomArr[i])
-                ]["Coh b"]
-                .values[0]
-                .real
-                for i in range(len(atomArr))
-            ]
-
         QArr, SofQ = fourierbesseltransform(
             RDF_DataFrame.iloc[:, 0], RDF_DataFrame.iloc[:, 1] - 1, unpack=True
         )
         self.QArrInterp = np.linspace(QArr[0], QArr[-1], len(QArr) * interpAmount)
 
-        if self.ionsDict is not None:
-            affArr = [
-                atomic_form_factor(
-                    atomArr[i] + self.ionsDict[atomArr[i]], self.QArrInterp
-                )
-                for i in range(len(atomArr))
-            ]
-        else:
-            affArr = [
-                atomic_form_factor(atomArr[i], self.QArrInterp)
-                for i in range(len(atomArr))
-            ]
-
-        self.compositionTable = pd.DataFrame(
-            {
-                "conc": concArr / np.sum(concArr),
-                "amu": [
-                    pTable.element(atomArr[i]).atomic_weight
-                    for i in range(len(atomArr))
-                ],
-                "b": bArr,
-                "aff": affArr,
-            },
-            index=atomArr,
+        self.compositionTable = _build_composition_table(
+            atomArr,
+            concArr,
+            self.QArrInterp,
+            isotope_dict=self.isotopeDict,
+            ions_dict=self.ionsDict,
         )
 
         # First Fourier transform the partial RDFs to partial SofQs
@@ -295,22 +289,9 @@ class weight_RDF_for_scattering:
             self.unweightedSofQ["Q"] = self.QArrInterp
             self.unweightedSofQ[column] = SofQ_interp
 
-        def _weighting(self, df, type="b"):
-            weightArray = {}
-            weightTotal = 0
-            for column in df.keys()[1:]:
-                atoms = column.split("-")
-                weighting = np.prod(
-                    self.compositionTable.loc[atoms].conc.values
-                    * self.compositionTable.loc[atoms][type].values
-                ) * (2 - 1 * (atoms[0] == atoms[1]))
-                weightArray[column] = weighting
-                weightTotal += weighting
-            return weightArray, weightTotal
-
         # Neutron weighting
-        self.weightArrayNeutron, self.weightTotalNeutron = _weighting(
-            self, RDF_DataFrame, type="b"
+        self.weightArrayNeutron, self.weightTotalNeutron = _calc_weighting(
+            self.compositionTable, RDF_DataFrame.keys()[1:], type="b"
         )
 
         # Neutron gofr
@@ -340,8 +321,8 @@ class weight_RDF_for_scattering:
         self.SofQNeutron["Total"] = totalSofQ
 
         # X-ray weighting
-        self.weightArrayXray, self.weightTotalXray = _weighting(
-            self, RDF_DataFrame, type="aff"
+        self.weightArrayXray, self.weightTotalXray = _calc_weighting(
+            self.compositionTable, RDF_DataFrame.keys()[1:], type="aff"
         )
 
         # X-ray SofQ
@@ -513,7 +494,7 @@ class weight_RDF_for_scattering:
                 labelValue = atoms
                 if self.isotopeDict is not None:
                     if atoms in self.isotopeDict.keys():
-                        labelValue + str(self.isotopeDict[atoms])
+                        labelValue += str(self.isotopeDict[atoms])
                 ax.plot(
                     self.QArrInterp,
                     np.full(len(self.QArrInterp), self.compositionTable.b[atoms]),
@@ -535,6 +516,7 @@ class weight_RDF_for_scattering:
                     label=labelValue + " aff",
                     **kwargs,
                 )
+        return ax
 
     def calc_num_density(self, density):
         """
@@ -557,3 +539,94 @@ class weight_RDF_for_scattering:
             / np.sum([self.compositionTable.conc * self.compositionTable.amu])
         )
         return num_density
+
+
+class ScatteringComposition:
+    def __init__(
+        self,
+        composition,
+        QArr=None,
+        isotopeDict=None,
+        ionsDict=None,
+    ):
+        """
+        Builds composition-based neutron and X-ray scattering quantities
+        without requiring RDF input.
+
+        This class parses a chemical formula, computes the normalized
+        composition, atomic masses, neutron coherent scattering lengths,
+        X-ray atomic form factors, unique atomic pairs, and the neutron
+        and X-ray weighting factors used by weight_RDF_for_scattering.
+        It is useful when you want access to the scattering tables and
+        pair-weight prefactors without calculating g(r) or S(Q).
+
+        Parameters
+        ----------
+        composition : str
+                    Input the composition as a string.
+                    Spaces are not required.
+                    Ex: F4Li2Be
+
+        QArr : array_like, optional
+                    Q grid to use for the X-ray atomic form factors.
+                    Default: np.linspace(0, 20, 101)
+
+        Returns
+        -------
+        compositionTable : DataFrame
+                        DataFrame containing the composition, b, and f(Q) values.
+
+        atomic_pairs : list
+                        Unique atomic pair labels generated from the composition.
+
+        weightArrayNeutron : dict
+                        Neutron scattering weights for each atomic pair.
+
+        weightArrayXray : dict
+                        X-ray scattering weights for each atomic pair.
+        """
+        self.isotopeDict = isotopeDict
+        self.ionsDict = ionsDict
+        self.QArr = np.linspace(0, 20, 101) if QArr is None else np.asarray(QArr)
+
+        atomArr, concArr = _parse_composition(composition, combine_duplicates=True)
+        self.compositionTable = _build_composition_table(
+            atomArr,
+            concArr,
+            self.QArr,
+            isotope_dict=self.isotopeDict,
+            ions_dict=self.ionsDict,
+        )
+
+        self.atomic_pairs = _build_atomic_pairs(self.compositionTable.index)
+        self.weightArrayNeutron, self.weightTotalNeutron = _calc_weighting(
+            self.compositionTable, self.atomic_pairs, type="b"
+        )
+        self.weightArrayXray, self.weightTotalXray = _calc_weighting(
+            self.compositionTable, self.atomic_pairs, type="aff"
+        )
+
+    def calc_num_density(self, density):
+        """
+        Calculates the number density (in num per Ang^3) using the
+        chemical formula and input density.
+
+        Inputs
+        ------
+        density : float
+                The density of the material at the desired temperature.
+
+        Returns
+        -------
+        num_density : float
+        """
+        num_density = (
+            constants.Avogadro
+            / 10**24
+            * density
+            / np.sum([self.compositionTable.conc * self.compositionTable.amu])
+        )
+        return num_density
+
+
+scatteringComposition = ScatteringComposition

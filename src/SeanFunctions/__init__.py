@@ -1,3 +1,3 @@
 from . import math, scattering, fitting
 
-__version__ = "v0.5.7"
+__version__ = "v0.6.0"
